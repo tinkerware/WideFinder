@@ -83,9 +83,9 @@ class Stat
                  byteCount     &&
                  ( referrer != null )); // "referrer" may be empty
 
-
-        boolean isArticle = (( httpMethod == 'GET' ) &&
+        boolean isArticle = (( httpMethod == 'GET' )             &&
                              ( uri.startsWith( ARTICLE_PREFIX )) &&
+                             ( ! uri.endsWith( '.png' ))         &&
                              ( ARTICLE_MATCHER.reset( uri ).lookingAt()));
 
         if ( isArticle )
