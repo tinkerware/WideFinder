@@ -167,7 +167,7 @@ class Start
 
         for ( int index = startIndex; index < endIndex; index++ ) // "index" is incremented manually - Range doesn't fit here
         {
-            if ( space( array[ index ] ) && ( tokenCounter < 11 ))
+            if ( space( array[ index ] ))
             {
                 switch ( tokenCounter++ )
                 {
@@ -182,29 +182,42 @@ class Start
                     case 9  : byteCount     = string( array, tokenStart, index );
                               break;
                     case 10 : referrer      = string( array, tokenStart + 1, index - 1 ); // Getting rid of wrapping '"'
-                              stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
                               break;
                 }
 
-                while ( array[ index ] == SPACE ){ index++ } // Skipping "space" sequence
-                tokenStart = index;
-            }
-            else if ( endOfLine( array[ index ] ))
-            {
-                linesCounter++;
+                if ( referrer != null )
+                {
+                   /**
+                    * We've found all tokens ("referrer" was the last one) - updating statistics
+                    */
+                   linesCounter++;
+                   stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
 
-                while(( index < endIndex ) && endOfLine( array[ index ] )){ index++ } // Skipping "end of line" sequence
-                assert ( endOfLine( array[ index - 1 ] ) && (( index == endIndex ) || ( ! endOfLine( array[ index ] ))));
+                   /**
+                    * Finding and skipping "end of line" sequence
+                    */
+                    while (( index < endIndex ) && ( ! endOfLine( array[ index ] ))){ index++ }
+                    while (( index < endIndex ) && (   endOfLine( array[ index ] ))){ index++ }
 
-                tokenStart    = index;
-                tokenCounter  = 0;
+                    tokenStart    = index;
+                    tokenCounter  = 0;
 
-                clientAddress = null;
-                httpMethod    = null;
-                uri           = null;
-                statusCode    = null;
-                byteCount     = null;
-                referrer      = null;
+                    clientAddress = null;
+                    httpMethod    = null;
+                    uri           = null;
+                    statusCode    = null;
+                    byteCount     = null;
+                    referrer      = null;
+                }
+                else
+                {
+                    /**
+                     * Not all tokens are found yet - keep looking for the next one
+                     * (skipping "space" sequence)
+                     */
+                    while ( array[ index ] == SPACE ){ index++ }
+                    tokenStart = index;
+                }
             }
         }
 
@@ -236,6 +249,6 @@ class Start
     */
     private static boolean endOfLine( byte b )
     {
-        (( b == LF ) || ( b == CR )) // Comparing for "\n" first - sample file has only "\n" (not "\r\n")
+        ( b == LF )
     }
 }
