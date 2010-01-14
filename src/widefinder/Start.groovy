@@ -2,20 +2,13 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.regex.Matcher
+
 import java.util.regex.Pattern
 
 
 @Typed
 class Start
 {
-    /**
-     * Possible HTTP methods:
-     * http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
-     */
-    private static final String HTTP_METHODS = 'GET|POST|HEAD|PUT|OPTIONS|DELETE|TRACE|CONNECT';
-
-
    /**
     * Top N counter
     */
@@ -23,12 +16,17 @@ class Start
 
 
     /**
-     * Single line pattern:
-     * pool-72-78-150-237.phlapa.east.verizon.net - - [17/Jun/2007:21:37:17 -0700] "GET /ongoing/ongoing.atom HTTP/1.1" 304 - "-" "NetNewsWire/2.1.1 (Mac OS X; Lite; http://ranchero.com/netnewswire/)"
-     * 222-155-178-51.jetstream.xtra.co.nz - - [17/Jun/2007:21:37:25 -0700] "GET /ongoing/When/200x/2007/06/15/IMGP5832.png HTTP/1.1" 200 18688 "http://planetsun.org/" "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; (R1 1.5); .NET CLR 1.1.4322)"
+     * Character constants
      */
-    private static final Pattern PATTERN =
-        Pattern.compile( /^(\S+).+?"($HTTP_METHODS) (\S+) HTTP\/1\.(?:1|0)" (\d+) (\S+) "(.+?)"/ );
+    private static final byte BN    = 0x0A; // "\n"
+    private static final byte SPACE = 0x20; // " "
+
+
+   /**
+    * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
+    */
+    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
+    private static final Pattern ARTICLE_PATTERN = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" );
 
 
     public static void main ( String[] args )
@@ -170,11 +168,7 @@ class Start
         {
             if ( endOfLine( array[ index ] ))
             {
-                int offset = lastStartIndex;
-                int length = ( index - lastStartIndex );
-
-                assert (( offset >= 0 ) && ( length > 0 ));
-                analyze( new String( array, offset, length, "UTF-8" ), stat );
+                analyze( array, lastStartIndex, stat );
 
                 linesCounter++;
 
@@ -191,39 +185,59 @@ class Start
 
 
    /**
-    * Analyzes the String specified according to benchmark needs
-    * See http://wikis.sun.com/display/WideFinder/The+Benchmark
-    *     http://groovy.codehaus.org/Regular+Expressions
-    *
+    * Analyzes the line specified (starting at index "offset" in the array specified)
+    * according to benchmark needs:
+    * - http://wikis.sun.com/display/WideFinder/The+Benchmark
+    * - http://groovy.codehaus.org/Regular+Expressions
     */
-    private static void analyze ( String line, Stat stat )
+    private static void analyze ( byte[] array, int offset, Stat stat )
     {
-        Matcher m = ( line =~ PATTERN );
-        assert  m, "Line [$line] doesn't match"
+        String  clientAddress = null;
+        String  httpMethod    = null;
+        String  uri           = null;
+        String  statusCode    = null;
+        String  byteCount     = null;
+        String  referrer      = null;
 
-// TODO
-// http://code.google.com/p/groovypptest/issues/detail?id=30
+        int     start         = offset;
+        int     end           = start;
+        boolean stop          = false;
 
-        String clientAddress = m.group( 1 ); // m[ 0 ][ 1 ];
-        String httpMethod    = m.group( 2 ); // m[ 0 ][ 2 ];
-        String uri           = m.group( 3 ); // m[ 0 ][ 3 ];
-        String statusCode    = m.group( 4 ); // m[ 0 ][ 4 ];
-        String byteCount     = m.group( 5 ); // m[ 0 ][ 5 ];
-        String referrer      = m.group( 6 ); // m[ 0 ][ 6 ];
+        for( int tokenCounter = 0; ( ! stop  ); end++ )
+        {
+            if ( array[ end ] == SPACE )
+            {
+                switch ( tokenCounter++ )
+                {
+                    case 0  : clientAddress = string( array, start, end );
+                              break;
+                    case 5  : httpMethod    = string( array, start + 1, end ); // Getting rid of starting '"'
+                              break;
+                    case 6  : uri           = string( array, start, end );
+                              break;
+                    case 8  : statusCode    = string( array, start, end );
+                              break;
+                    case 9  : byteCount     = string( array, start, end );
+                              break;
+                    case 10 : referrer      = string( array, start + 1, end - 1 ); // Getting rid of wrapping '"'
+                              stop          = true; // We're done with this line!
+                              break;
+                }
 
-// TODO
-// http://code.google.com/p/groovypptest/issues/detail?id=25
-//        def ( all_ignored, clientAddress, httpMethod, uri, statusCode, byteCount, referrer ) = m[ 0 ];
+                while ( array[ end ] == SPACE ){ end++ }
+                start = end;
+            }
+        }
 
-        assert ( clientAddress && httpMethod && uri && statusCode && byteCount && referrer );
+        assert ( clientAddress && httpMethod && uri && statusCode && byteCount && ( referrer != null )); // "referrer" may be empty
 
-        boolean isArticle = (( httpMethod == 'GET' ) &&
-                             ( uri ==~ '^/ongoing/When/\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+$' ));
+        boolean isArticle = (( httpMethod == 'GET' ) && ( uri.startsWith( ARTICLE_PREFIX )) && ( uri ==~ ARTICLE_PATTERN ));
+
         if ( isArticle )
         {
             stat.addArticle( uri,
                              clientAddress,
-                             (( referrer != '-' ) ? referrer : null ));
+                             ((( ! referrer.isEmpty()) && ( referrer != '-' )) ? referrer : null ));
         }
 
         stat.addUri( uri,
@@ -232,11 +246,22 @@ class Start
     }
 
 
+
+   /**
+    * Creates a String using the array specified and "UTF-8" charset.
+    * String starts at index "start" and ends at index "end - 1"
+    */
+    private static String string( byte[] array, int start, int end )
+    {
+        new String( array, start, ( end - start ), "UTF-8" );
+    }
+
+
    /**
     * Determines if byte specified is an end-of-line character
     */
     private static boolean endOfLine( byte b )
     {
-        return ( b == 0x0A ); // "\n"
+        ( b == BN );
     }
 }
