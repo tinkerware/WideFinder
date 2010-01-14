@@ -14,6 +14,13 @@ class ExecutorDemo
             super( target );
             println "MyThread created"
         }
+
+        String toString ()
+        {
+            return "MyThread";
+        }
+
+
     }
 
 
@@ -24,6 +31,7 @@ class ExecutorDemo
         [ 1, 2, 3 ].iterator().each( pool )
         {
             println Thread.currentThread();
+            println Thread.currentThread() instanceof MyThread;
         }
     }
 }
