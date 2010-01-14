@@ -1,5 +1,7 @@
 package widefinder
 
+import java.util.regex.Pattern
+import java.util.regex.Matcher
 
 /**
  * Statistics class
@@ -7,24 +9,13 @@ package widefinder
 @Typed
 class Stat
 {
-    private final Map<String, L>              articlesToHits      = new HashMap<String, L>();
-    private final Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
-    private final Map<String, L>              uriTo404            = new HashMap<String, L>();
-    private final Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
-    private final Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
 
-
-    Stat ()
-    {
-    }
-
-
-    Map<String, L>              articlesToHits()      { return this.@articlesToHits      }
-    Map<String, L>              uriToByteCounts()     { return this.@uriToByteCounts     }
-    Map<String, L>              uriTo404()            { return this.@uriTo404            }
-    Map<String, Map<String, L>> articlesToClients()   { return this.@articlesToClients   }
-    Map<String, Map<String, L>> articlesToReferrers() { return this.@articlesToReferrers }
-
+    /**
+     * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
+     */
+    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
+    private static final Matcher ARTICLE_MATCHER = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" ).
+                                                   matcher( "" );
 
 
     private static L get( Map<String, L> map, String key )
@@ -51,18 +42,73 @@ class Stat
     }
 
 
-    L articlesToHitsCounter      ( String articleUri )                       { get( this.articlesToHits,  articleUri  ) }
-    L uriToByteCountsCounter     ( String uri        )                       { get( this.uriToByteCounts, uri         ) }
-    L uriTo404Counter            ( String uri        )                       { get( this.uriTo404,        uri         ) }
-    L clientsToArticlesCounter   ( String articleUri, String clientAddress ) { get( this.articlesToClients,   articleUri, clientAddress ) }
-    L referrersToArticlesCounter ( String articleUri, String referrer      ) { get( this.articlesToReferrers, articleUri, referrer      ) }
+    Stat ()
+    {
+    }
 
+
+    private final Map<String, L>              articlesToHits      = new HashMap<String, L>();
+    private final Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
+    private final Map<String, L>              uriTo404            = new HashMap<String, L>();
+    private final Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
+    private final Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
+
+
+    private L articlesToHitsCounter      ( String articleUri )                       { get( this.@articlesToHits,  articleUri  ) }
+    private L uriToByteCountsCounter     ( String uri        )                       { get( this.@uriToByteCounts, uri         ) }
+    private L uriTo404Counter            ( String uri        )                       { get( this.@uriTo404,        uri         ) }
+    private L clientsToArticlesCounter   ( String articleUri, String clientAddress ) { get( this.@articlesToClients,   articleUri, clientAddress ) }
+    private L referrersToArticlesCounter ( String articleUri, String referrer      ) { get( this.@articlesToReferrers, articleUri, referrer      ) }
+
+
+    Map<String, L>              articlesToHits()      { return this.@articlesToHits      }
+    Map<String, L>              uriToByteCounts()     { return this.@uriToByteCounts     }
+    Map<String, L>              uriTo404()            { return this.@uriTo404            }
+    Map<String, Map<String, L>> articlesToClients()   { return this.@articlesToClients   }
+    Map<String, Map<String, L>> articlesToReferrers() { return this.@articlesToReferrers }
+
+
+
+   /**
+    * Updates statistics according to benchmark needs:
+    * - http://wikis.sun.com/display/WideFinder/The+Benchmark
+    * - http://groovy.codehaus.org/Regular+Expressions
+    */
+    void update( String clientAddress, String httpMethod, String uri, String statusCode, String byteCount, String referrer )
+    {
+        assert ( clientAddress &&
+                 httpMethod    &&
+                 uri           &&
+                 statusCode    &&
+                 byteCount     &&
+                 ( referrer != null )); // "referrer" may be empty
+
+
+        boolean isArticle = (( httpMethod == 'GET' ) &&
+                             ( uri.startsWith( ARTICLE_PREFIX )) &&
+                             ( ARTICLE_MATCHER.reset( uri ).lookingAt()));
+
+        if ( isArticle )
+        {
+            addArticle( uri,
+                        clientAddress,
+                        ((( ! referrer.isEmpty()) && ( referrer != '-' )) ? referrer : null ));
+        }
+
+        addUri( uri,
+                (( byteCount != '-' ) ? Integer.valueOf( byteCount ) : 0 ),
+                ( statusCode == '404' ));
+    }
 
 
     /**
+     * Adds new articles to statistics
      *
+     * @param articleUri    URI of article
+     * @param clientAddress address of requesting client
+     * @param referrer      request referrer
      */
-    void addArticle( String articleUri, String clientAddress, String referrer )
+    private void addArticle( String articleUri, String clientAddress, String referrer )
     {
         assert( articleUri && clientAddress );
 
@@ -77,121 +123,17 @@ class Stat
 
 
     /**
+     * Adds new URI to statistics
      *
+     * @param uri   request URI
+     * @param bytes request total bytes returned
+     * @param is404 whether a response was 404
      */
-     void addUri( String uri, int bytes, boolean is404 )
+    private void addUri( String uri, int bytes, boolean is404 )
     {
         assert( uri );
 
         if ( bytes > 0 ) { uriToByteCountsCounter( uri ).add( bytes ) }
         if ( is404     ) { uriTo404Counter( uri ).increment()         }
-    }
-
-
-
-   /**
-    *
-    */
-    static Map<String, Long> top ( int n, Map<String, Long> topArticles, Map<String, Map<String, L>> countersMap )
-    {
-        assert ( topArticles.size() <= n );
-
-        /**
-         * Collection of maps (key => counter) corresponding to top articles
-         */
-        List<Map<String, L>> maps = new ArrayList<Map<String,L>>( n );
-
-        topArticles.keySet().each
-        {
-            String topArticle ->
-
-            if ( countersMap[ topArticle ] != null ) { maps << countersMap[ topArticle ] }
-        }
-
-        return top( n, maps.toArray( new Map<String, L>[ maps.size() ] ));
-    }
-
-
-   /**
-    * Retrieves values corresponding to the "top N" counters in the Map specified.
-    */
-    static Map<String, Long> top ( int n, Map<String, L> ... maps )
-    {
-        assert (( n > 0 ) && ( maps != null ));
-
-        Map<String, Long>             resultMap      = new LinkedHashMap<String, Long>( n );
-        Map<Long, Collection<String>> topCountersMap = topCountersMap( n, maps );
-
-       /**
-        * Iterating over all counters sorted in decreasing order (from top to bottom)
-        * and filling the result map (no more than n entries)
-        */
-        topCountersMap.keySet().sort{ long a, long b -> ( b - a ) }.each
-        {
-            long topCounter ->
-
-            /**
-             * Iterating over each String corresponding to "top counter"
-             */
-            topCountersMap[ topCounter ].each
-            {
-                if ( resultMap.size() < n ) { resultMap.put( it, topCounter ) }
-            }
-        }
-
-        assert ( resultMap.size() <= n );
-        return   resultMap;
-    }
-
-
-   /**
-    * Creates a small "top counters" Map (of size n) from a BIG "key => counter" maps:
-    *
-    * - Key (Long)                 - top n counters found in the map specified
-    * - Value (Collection<String>) - original map's keys that were mapped to that key (counter).
-    *                                (no more than n)
-    *
-    * "Top n counter" means that a counter is in "top n" elements if all original counters
-    * (values of the map specified) were sorted but we use no sorting here since it's not needed.
-    */
-    private static Map<Long, Collection<String>> topCountersMap ( int n, Map<String, L> ... maps )
-    {
-        assert (( n > 0 ) && ( maps != null ));
-
-        Map<Long, Collection<String>> topCountersMap = new HashMap<Long, Collection<String>>( n );
-        long[]                        minCounter     = [ Long.MAX_VALUE ]; // Currently known minimal counter
-
-        maps.each
-        {
-            Map<String, L> map ->
-
-            map.each
-            {
-                String key, L l ->
-
-                long     counter = l.counter();
-                assert ( counter > 0 );
-
-                if (( topCountersMap.size() == n ) && ( counter > minCounter[ 0 ] ) && ( ! topCountersMap[ counter ] ))
-                {
-                    topCountersMap.remove( minCounter[ 0 ] );
-                }
-
-                if (( topCountersMap.size() < n ) && ( ! topCountersMap[ counter ] ))
-                {
-                    topCountersMap[ counter ] = new ArrayList<String>( n );
-                    minCounter[ 0 ]           = counter;
-                    topCountersMap.keySet().each{ minCounter[ 0 ] = (( it < minCounter[ 0 ] ) ? it : minCounter[ 0 ] ) }
-                }
-
-                if ( topCountersMap.containsKey( counter ) && ( topCountersMap[ counter ].size() < n ))
-                {
-                    topCountersMap[ counter ] << key;
-                }
-            }
-        }
-
-        assert ( topCountersMap.size() <= n );
-        return   topCountersMap;
     }
 }

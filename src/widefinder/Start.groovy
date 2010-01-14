@@ -3,8 +3,6 @@ package widefinder
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
-import java.util.regex.Pattern
-
 
 @Typed
 class Start
@@ -18,15 +16,9 @@ class Start
     /**
      * Character constants
      */
-    private static final byte BN    = 0x0A; // "\n"
+    private static final byte CR    = 0x0D; // "\r"
+    private static final byte LF    = 0x0A; // "\n"
     private static final byte SPACE = 0x20; // " "
-
-
-   /**
-    * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
-    */
-    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
-    private static final Pattern ARTICLE_PATTERN = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" );
 
 
     public static void main ( String[] args )
@@ -48,13 +40,13 @@ class Start
         channel.close();
         fis.close();
 
-        Map<String, Long> topArticles = Stat.top( N, stat.articlesToHits());
+        Map<String, Long> topArticles = StatUtils.top( N, stat.articlesToHits());
 
         report( "Top $N articles (by hits)",          topArticles );
-        report( "Top $N URIs (by bytes count)",       Stat.top( N, stat.uriToByteCounts()));
-        report( "Top $N URIs (by 404 responses)",     Stat.top( N, stat.uriTo404()));
-        report( "Top $N clients (by hot articles)",   Stat.top( N, topArticles, stat.articlesToClients()));
-        report( "Top $N referrers (by hot articles)", Stat.top( N, topArticles, stat.articlesToReferrers()));
+        report( "Top $N URIs (by bytes count)",       StatUtils.top( N, stat.uriToByteCounts()));
+        report( "Top $N URIs (by 404 responses)",     StatUtils.top( N, stat.uriTo404()));
+        report( "Top $N clients (by hot articles)",   StatUtils.top( N, topArticles, stat.articlesToClients()));
+        report( "Top $N referrers (by hot articles)", StatUtils.top( N, topArticles, stat.articlesToReferrers()));
 
         println "[$lines] lines, [${ System.currentTimeMillis() - t }] ms"
     }
@@ -64,6 +56,7 @@ class Start
     {
         println ">>> $title <<<: \n* ${ map.entrySet().collect{ Map.Entry entry -> "${ entry.key } : ${ entry.value }" }.join( "\n* " ) }"
     }
+
 
 
    /**
@@ -161,37 +154,6 @@ class Start
                     ( endIndex <= array.length ) &&
                         ( startIndex < endIndex ));
 
-        int linesCounter   = 0;
-        int lastStartIndex = 0;
-
-        for ( int index = startIndex; index < endIndex; index++ ) // "index" is incremented manually - Range doesn't fit here
-        {
-            if ( endOfLine( array[ index ] ))
-            {
-                analyze( array, lastStartIndex, stat );
-
-                linesCounter++;
-
-                while(( index < endIndex ) && endOfLine( array[ index ] )){ index++ } // Skipping "end of line" sequence
-                assert ( endOfLine( array[ index - 1 ] ) && (( index == endIndex ) || ( ! endOfLine( array[ index ] ))));
-
-                lastStartIndex = index;
-            }
-        }
-
-        return linesCounter;
-    }
-
-
-
-   /**
-    * Analyzes the line specified (starting at index "offset" in the array specified)
-    * according to benchmark needs:
-    * - http://wikis.sun.com/display/WideFinder/The+Benchmark
-    * - http://groovy.codehaus.org/Regular+Expressions
-    */
-    private static void analyze ( byte[] array, int offset, Stat stat )
-    {
         String  clientAddress = null;
         String  httpMethod    = null;
         String  uri           = null;
@@ -199,52 +161,55 @@ class Start
         String  byteCount     = null;
         String  referrer      = null;
 
-        int     start         = offset;
-        int     end           = start;
-        boolean stop          = false;
+        int     linesCounter  = 0;
+        int     tokenStart    = startIndex;
+        int     tokenCounter  = 0;
 
-        for( int tokenCounter = 0; ( ! stop  ); end++ )
+        for ( int index = startIndex; index < endIndex; index++ ) // "index" is incremented manually - Range doesn't fit here
         {
-            if ( array[ end ] == SPACE )
+            if ( space( array[ index ] ) && ( tokenCounter < 11 ))
             {
                 switch ( tokenCounter++ )
                 {
-                    case 0  : clientAddress = string( array, start, end );
+                    case 0  : clientAddress = string( array, tokenStart, index );
                               break;
-                    case 5  : httpMethod    = string( array, start + 1, end ); // Getting rid of starting '"'
+                    case 5  : httpMethod    = string( array, tokenStart + 1, index ); // Getting rid of starting '"'
                               break;
-                    case 6  : uri           = string( array, start, end );
+                    case 6  : uri           = string( array, tokenStart, index );
                               break;
-                    case 8  : statusCode    = string( array, start, end );
+                    case 8  : statusCode    = string( array, tokenStart, index );
                               break;
-                    case 9  : byteCount     = string( array, start, end );
+                    case 9  : byteCount     = string( array, tokenStart, index );
                               break;
-                    case 10 : referrer      = string( array, start + 1, end - 1 ); // Getting rid of wrapping '"'
-                              stop          = true; // We're done with this line!
+                    case 10 : referrer      = string( array, tokenStart + 1, index - 1 ); // Getting rid of wrapping '"'
+                              stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
                               break;
                 }
 
-                while ( array[ end ] == SPACE ){ end++ }
-                start = end;
+                while ( array[ index ] == SPACE ){ index++ } // Skipping "space" sequence
+                tokenStart = index;
+            }
+            else if ( endOfLine( array[ index ] ))
+            {
+                linesCounter++;
+
+                while(( index < endIndex ) && endOfLine( array[ index ] )){ index++ } // Skipping "end of line" sequence
+                assert ( endOfLine( array[ index - 1 ] ) && (( index == endIndex ) || ( ! endOfLine( array[ index ] ))));
+
+                tokenStart    = index;
+                tokenCounter  = 0;
+
+                clientAddress = null;
+                httpMethod    = null;
+                uri           = null;
+                statusCode    = null;
+                byteCount     = null;
+                referrer      = null;
             }
         }
 
-        assert ( clientAddress && httpMethod && uri && statusCode && byteCount && ( referrer != null )); // "referrer" may be empty
-
-        boolean isArticle = (( httpMethod == 'GET' ) && ( uri.startsWith( ARTICLE_PREFIX )) && ( uri ==~ ARTICLE_PATTERN ));
-
-        if ( isArticle )
-        {
-            stat.addArticle( uri,
-                             clientAddress,
-                             ((( ! referrer.isEmpty()) && ( referrer != '-' )) ? referrer : null ));
-        }
-
-        stat.addUri( uri,
-                     (( byteCount != '-' ) ? Integer.valueOf( byteCount ) : 0 ),
-                     ( statusCode == '404' ));
+        return linesCounter;
     }
-
 
 
    /**
@@ -258,10 +223,19 @@ class Start
 
 
    /**
+    * Determines if byte specified is a space character
+    */
+    private static boolean space( byte b )
+    {
+        ( b == SPACE );
+    }
+
+
+   /**
     * Determines if byte specified is an end-of-line character
     */
     private static boolean endOfLine( byte b )
     {
-        ( b == BN );
+        (( b == LF ) || ( b == CR )) // Comparing for "\n" first - sample file has only "\n" (not "\r\n")
     }
 }
