@@ -35,7 +35,7 @@ class Start
         ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
         FileInputStream fis        = new FileInputStream( file );
         FileChannel     channel    = fis.getChannel();
-        long            lines      = processLines( channel, buffer, cpuNum, stat );
+        long            lines      = process( channel, buffer, cpuNum, stat );
 
         channel.close();
         fis.close();
@@ -62,7 +62,7 @@ class Start
    /**
     * Reads number of lines in the channel specified
     */
-    private static long processLines ( FileChannel channel, ByteBuffer buffer, int cpuNum, Stat stat )
+    private static long process ( FileChannel channel, ByteBuffer buffer, int cpuNum, Stat stat )
     {
         buffer.rewind();
 
@@ -126,7 +126,7 @@ class Start
                 assert (                                    ( ! endOfLine( array[ startIndex ] )));
                 assert (( endIndex == buffer.position()) || ( ! endOfLine( array[ endIndex ]   )));
 
-                totalLines += processLinesPerThread( array, startIndex, endIndex, stat );
+                totalLines += processLines( array, startIndex, endIndex, stat );
                 startIndex  = endIndex;
             }
 
@@ -148,7 +148,7 @@ class Start
     * - it ends   at index "endIndex" - 1
     * - it contains a number of complete rows (no half rows)
     */
-    private static int processLinesPerThread( byte[] array, int startIndex, int endIndex, Stat stat )
+    private static int processLines( byte[] array, int startIndex, int endIndex, Stat stat )
     {
         assert (( startIndex >=0 ) &&
                     ( endIndex <= array.length ) &&
