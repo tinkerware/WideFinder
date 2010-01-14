@@ -215,7 +215,7 @@ class Start
                      * Not all tokens are found yet - keep looking for the next one
                      * (skipping "space" sequence)
                      */
-                    while ( array[ index ] == SPACE ){ index++ }
+                    while ( space( array[ index ] )){ index++ }
                     tokenStart = index;
                 }
             }
