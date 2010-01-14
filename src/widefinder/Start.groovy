@@ -35,7 +35,7 @@ class Start
         ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
         FileInputStream fis        = new FileInputStream( file );
         FileChannel     channel    = fis.getChannel();
-        long            lines      = process( channel, buffer, cpuNum, stat );
+        long            lines      = processChannel( channel, buffer, cpuNum, stat );
 
         channel.close();
         fis.close();
@@ -62,7 +62,7 @@ class Start
    /**
     * Reads number of lines in the channel specified
     */
-    private static long process ( FileChannel channel, ByteBuffer buffer, int cpuNum, Stat stat )
+    private static long processChannel ( FileChannel channel, ByteBuffer buffer, int cpuNum, Stat stat )
     {
         buffer.rewind();
 
