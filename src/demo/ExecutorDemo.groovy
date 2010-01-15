@@ -2,6 +2,7 @@ package demo
 
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Typed
 class ExecutorDemo
@@ -12,13 +13,15 @@ class ExecutorDemo
         int             n    = Runtime.getRuntime().availableProcessors();
         ExecutorService pool = Executors.newFixedThreadPool( n );
 
-        ( 1 .. n ).iterator().each( pool )
+        Future f = ( 1 .. n ).iterator().each( pool )
         {
             println "[${ new Date()}]: [$it]: [${ Thread.currentThread() }] started";
             long t = System.currentTimeMillis();
             calc();
             println "[${ new Date()}]: [$it]: [${ Thread.currentThread() }] finished - (${ System.currentTimeMillis() - t } ms)";
-        }.get();
+        };
+
+        while( ! f.isDone()){ sleep( 500 ) }
 
         println "[${ new Date()}]: all threads finished"
         pool.shutdown();
