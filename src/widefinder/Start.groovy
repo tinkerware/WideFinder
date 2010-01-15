@@ -185,21 +185,21 @@ class Start
                     */
                    stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
 
+                   tokenStart    = index;
+                   tokenCounter  = 0;
+
+                   clientAddress = null;
+                   httpMethod    = null;
+                   uri           = null;
+                   statusCode    = null;
+                   byteCount     = null;
+                   referrer      = null;
+
                    /**
                     * Finding and skipping "end of line" sequence
                     */
                     while (( index < endIndex ) && ( ! endOfLine( array[ index ] ))){ index++ }
                     while (( index < endIndex ) && (   endOfLine( array[ index ] ))){ index++ }
-
-                    tokenStart    = index;
-                    tokenCounter  = 0;
-
-                    clientAddress = null;
-                    httpMethod    = null;
-                    uri           = null;
-                    statusCode    = null;
-                    byteCount     = null;
-                    referrer      = null;
                 }
                 else
                 {
