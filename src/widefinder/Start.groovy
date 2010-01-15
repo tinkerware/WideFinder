@@ -99,7 +99,7 @@ class Start
             if ( chunkSize < 1024 ) { chunkSize = buffer.position() }
 
             /**
-             * List of pars ([startIndex, endIndex]) for each block to analyze (per thread)
+             * List of Futures from processing threads
              */
             List<Future> futures = [];
 
