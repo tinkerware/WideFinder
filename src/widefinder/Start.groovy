@@ -178,30 +178,7 @@ class Start
                               break;
                 }
 
-                if ( referrer != null )
-                {
-                   /**
-                    * We've found all tokens ("referrer" was the last one) - updating statistics
-                    */
-                   stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
-
-                   /**
-                    * Finding and skipping "end of line" sequence
-                    */
-                    while (( index < endIndex ) && ( ! endOfLine( array[ index ] ))){ index++ }
-                    while (( index < endIndex ) && (   endOfLine( array[ index ] ))){ index++ }
-
-                    tokenStart    = index;
-                    tokenCounter  = 0;
-
-                    clientAddress = null;
-                    httpMethod    = null;
-                    uri           = null;
-                    statusCode    = null;
-                    byteCount     = null;
-                    referrer      = null;
-                }
-                else
+                if ( referrer == null )
                 {
                     /**
                      * Not all tokens are found yet - keep looking for the next one
@@ -209,6 +186,29 @@ class Start
                      */
                     while ( space( array[ index ] )){ index++ }
                     tokenStart = index;
+                }
+                else
+                {
+                    /**
+                     * We've found all tokens ("referrer" was the last one) - updating statistics
+                     */
+                    stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
+
+                    /**
+                     * Finding and skipping "end of line" sequence
+                     */
+                     while (( index < endIndex ) && ( ! endOfLine( array[ index ] ))){ index++ }
+                     while (( index < endIndex ) && (   endOfLine( array[ index ] ))){ index++ }
+
+                     tokenStart    = index;
+                     tokenCounter  = 0;
+
+                     clientAddress = null;
+                     httpMethod    = null;
+                     uri           = null;
+                     statusCode    = null;
+                     byteCount     = null;
+                     referrer      = null;
                 }
             }
         }
