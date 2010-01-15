@@ -125,9 +125,7 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
-                futures << pool.submit(( Runnable ) [ run : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread()));
-                                                              println "[${ Thread.currentThread()}]"
-                                                            }])
+                futures << pool.submit([ run : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) }])
                 startIndex = endIndex;
             }
 
