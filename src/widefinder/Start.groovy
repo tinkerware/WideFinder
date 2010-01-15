@@ -2,7 +2,7 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-
+import java.util.concurrent.*
 
 @Typed
 class Start
@@ -23,23 +23,25 @@ class Start
 
     public static void main ( String[] args )
     {
-        long   t            = System.currentTimeMillis();
-        int    bufferSizeMb = 10;
-        int    cpuNum       = Runtime.getRuntime().availableProcessors();
-        File   file         = new File( args[ 0 ] );
-        Stat   stat         = new Stat();
+        final long t       = System.currentTimeMillis();
+        final File file    = new File( args[ 0 ] );
+        final int  coreNum = Runtime.getRuntime().availableProcessors()
 
-        assert file.isFile();
+        assert file.isFile(), "File [$file] is not available" ;
 
-        int             bufferSize = Math.min( file.size(), ( bufferSizeMb * 1024 * 1024 ));
+        ExecutorService pool       = Executors.newFixedThreadPool( coreNum, [ newThread : { Runnable r -> new Stat( r ) } ] );
+        int             bufferSize = Math.min( file.size(), ( 10 * 1024 * 1024 ));
         ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
         FileInputStream fis        = new FileInputStream( file );
         FileChannel     channel    = fis.getChannel();
-        long            lines      = processChannel( channel, buffer, cpuNum, stat );
+
+        processChannel( channel, buffer, pool, coreNum );
 
         channel.close();
         fis.close();
+        pool.shutdown();
 
+/*
         Map<String, Long> topArticles = StatUtils.top( N, stat.articlesToHits());
 
         report( "Top $N articles (by hits)",          topArticles );
@@ -47,8 +49,9 @@ class Start
         report( "Top $N URIs (by 404 responses)",     StatUtils.top( N, stat.uriTo404()));
         report( "Top $N clients (by hot articles)",   StatUtils.top( N, topArticles, stat.articlesToClients()));
         report( "Top $N referrers (by hot articles)", StatUtils.top( N, topArticles, stat.articlesToReferrers()));
+*/
 
-        println "[$lines] lines, [${ System.currentTimeMillis() - t }] ms"
+        println "[${ System.currentTimeMillis() - t }] ms"
     }
 
 
@@ -62,22 +65,18 @@ class Start
    /**
     * Reads number of lines in the channel specified
     */
-    private static long processChannel ( FileChannel channel, ByteBuffer buffer, int cpuNum, Stat stat )
+    private static void processChannel ( FileChannel channel, ByteBuffer buffer, ExecutorService pool, int poolSize )
     {
         buffer.rewind();
-
-        long totalLines     = 0;
-        long totalBytesRead = 0;
 
         /**
          * Reading from file channel into buffer (until it ends)
          */
         for ( int remaining = 0; ( channel.position() < channel.size()); )
         {
-            int  bytesRead  = channel.read( buffer );
-            totalBytesRead += bytesRead;
-            byte[] array    = buffer.array();
-            boolean isEof   = ( channel.position() == channel.size());
+            int     bytesRead = channel.read( buffer );
+            byte[]  array     = buffer.array();
+            boolean isEof     = ( channel.position() == channel.size());
 
             assert (( bytesRead > 0 ) &&
                         (( bytesRead + remaining ) == buffer.position()) &&
@@ -92,12 +91,17 @@ class Start
              * "chunk"      - array[ startIndex ] - array[ endIndex - 1 ]
              */
             int startIndex = 0;
-            int chunkSize  = ( buffer.position() / cpuNum );
+            int chunkSize  = ( buffer.position() / poolSize );
 
            /**
             * When chunk size is too small - we leave only a single chunk for a single thread
             */
             if ( chunkSize < 1024 ) { chunkSize = buffer.position() }
+
+            /**
+             * List of pars ([startIndex, endIndex]) for each block to analyze (per thread)
+             */
+            List<Callable<Void>> callables = [];
 
             for ( int endIndex = chunkSize; ( endIndex <= buffer.position()); endIndex += chunkSize )
             {
@@ -121,23 +125,18 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
-                assert (( startIndex == 0 ) || (( startIndex > 0 ) && endOfLine( array[ startIndex - 1 ] )));
-                assert (                        ( endIndex   > 0 ) && endOfLine( array[ endIndex   - 1 ] ));
-                assert (                                    ( ! endOfLine( array[ startIndex ] )));
-                assert (( endIndex == buffer.position()) || ( ! endOfLine( array[ endIndex ]   )));
+                callables << [ call : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) } ]
 
-                totalLines += processLines( array, startIndex, endIndex, stat );
-                startIndex  = endIndex;
+                startIndex = endIndex;
             }
+
+            pool.invokeAll( callables )*.get();
 
             buffer.position( startIndex );  // Moving buffer's position a little back to last known "endIndex"
             remaining = buffer.remaining(); // How many bytes are left unread in buffer
             buffer.compact();               // Copying remaining (unread) bytes to beginning of buffer
                                             // Next file read will be added to them
         }
-
-        assert ( totalBytesRead == channel.size());
-        return totalLines;
     }
 
 
@@ -148,12 +147,8 @@ class Start
     * - it ends   at index "endIndex" - 1
     * - it contains a number of complete rows (no half rows)
     */
-    private static int processLines( byte[] array, int startIndex, int endIndex, Stat stat )
+    static void processLines( byte[] array, int startIndex, int endIndex, Stat stat )
     {
-        assert (( startIndex >=0 ) &&
-                    ( endIndex <= array.length ) &&
-                        ( startIndex < endIndex ));
-
         String  clientAddress = null;
         String  httpMethod    = null;
         String  uri           = null;
@@ -161,7 +156,6 @@ class Start
         String  byteCount     = null;
         String  referrer      = null;
 
-        int     linesCounter  = 0;
         int     tokenStart    = startIndex;
         int     tokenCounter  = 0;
 
@@ -190,7 +184,6 @@ class Start
                    /**
                     * We've found all tokens ("referrer" was the last one) - updating statistics
                     */
-                   linesCounter++;
                    stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
 
                    /**
@@ -220,8 +213,6 @@ class Start
                 }
             }
         }
-
-        return linesCounter;
     }
 
 

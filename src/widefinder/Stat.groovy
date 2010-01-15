@@ -7,17 +7,21 @@ import java.util.regex.Matcher
  * Statistics class
  */
 @Typed
-class Stat
+class Stat extends Thread
 {
 
-    /**
-     * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
-     */
-    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
-    private static final Matcher ARTICLE_MATCHER = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" ).
-                                                   matcher( "" );
+    Stat ( Runnable r )
+    {
+        super( r )
+        println "[${ this }] created"
+    }
 
 
+
+   /**
+    * Gets a counter bound to the key specified in the map passed
+    * (creates a new one if it doesn't exist yet)
+    */
     private static L get( Map<String, L> map, String key )
     {
         assert( key && ( map != null ));
@@ -29,6 +33,10 @@ class Stat
     }
 
 
+    /**
+     * Gets a counter bound to the key1 => key2 specified in the map passed
+     * (creates a new one if it doesn't exist yet)
+     */
     private static L get( Map<String, Map<String, L>> map, String key, String secondKey )
     {
         assert( key && secondKey && ( map != null ));
@@ -42,30 +50,31 @@ class Stat
     }
 
 
-    Stat ()
-    {
-    }
+    /**
+     * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
+     */
+    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
+    private        final Matcher ARTICLE_MATCHER = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" ).
+                                                   matcher( "" );
+
+   /**
+    * Maps holding all statistical data
+    */
+    final Map<String, L>              articlesToHits      = new HashMap<String, L>();
+    final Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
+    final Map<String, L>              uriTo404            = new HashMap<String, L>();
+    final Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
+    final Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
 
 
-    private final Map<String, L>              articlesToHits      = new HashMap<String, L>();
-    private final Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
-    private final Map<String, L>              uriTo404            = new HashMap<String, L>();
-    private final Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
-    private final Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
-
-
-    private L articlesToHitsCounter      ( String articleUri )                       { get( this.@articlesToHits,  articleUri  ) }
-    private L uriToByteCountsCounter     ( String uri        )                       { get( this.@uriToByteCounts, uri         ) }
-    private L uriTo404Counter            ( String uri        )                       { get( this.@uriTo404,        uri         ) }
+   /**
+    * Statistical maps counters convenience accessors
+    */
+    private L articlesToHitsCounter      ( String articleUri )                       { get( this.@articlesToHits,      articleUri  ) }
+    private L uriToByteCountsCounter     ( String uri        )                       { get( this.@uriToByteCounts,     uri         ) }
+    private L uriTo404Counter            ( String uri        )                       { get( this.@uriTo404,            uri         ) }
     private L clientsToArticlesCounter   ( String articleUri, String clientAddress ) { get( this.@articlesToClients,   articleUri, clientAddress ) }
     private L referrersToArticlesCounter ( String articleUri, String referrer      ) { get( this.@articlesToReferrers, articleUri, referrer      ) }
-
-
-    Map<String, L>              articlesToHits()      { return this.@articlesToHits      }
-    Map<String, L>              uriToByteCounts()     { return this.@uriToByteCounts     }
-    Map<String, L>              uriTo404()            { return this.@uriTo404            }
-    Map<String, Map<String, L>> articlesToClients()   { return this.@articlesToClients   }
-    Map<String, Map<String, L>> articlesToReferrers() { return this.@articlesToReferrers }
 
 
 
