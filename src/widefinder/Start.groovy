@@ -101,7 +101,7 @@ class Start
             /**
              * List of pars ([startIndex, endIndex]) for each block to analyze (per thread)
              */
-            List<Callable<Void>> callables = [];
+            List<Future> futures = [];
 
             for ( int endIndex = chunkSize; ( endIndex <= buffer.position()); endIndex += chunkSize )
             {
@@ -125,12 +125,13 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
-                callables << [ call : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) } ]
-
+                futures << pool.submit(( Runnable ) [ run : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread()));
+                                                              println "[${ Thread.currentThread()}]"
+                                                            }])
                 startIndex = endIndex;
             }
 
-            pool.invokeAll( callables )*.get();
+            futures*.get();
 
             buffer.position( startIndex );  // Moving buffer's position a little back to last known "endIndex"
             remaining = buffer.remaining(); // How many bytes are left unread in buffer
