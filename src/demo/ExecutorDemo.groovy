@@ -16,8 +16,8 @@ class ExecutorDemo
         {
             println "[${ new Date()}]: [$it]: [${ Thread.currentThread() }] started";
             long t = System.currentTimeMillis();
-            long j = calc();
-            println "[${ new Date()}]: [$it]: [${ Thread.currentThread() }] finished - [$j] (${ System.currentTimeMillis() - t } ms)";
+            calc();
+            println "[${ new Date()}]: [$it]: [${ Thread.currentThread() }] finished - (${ System.currentTimeMillis() - t } ms)";
         }.get();
 
         println "[${ new Date()}]: all threads finished"
@@ -25,16 +25,17 @@ class ExecutorDemo
     }
 
 
-    static long calc ()
+    static void calc ()
     {
-        long   j    = 1;
         Random rand = new Random( new Random( System.currentTimeMillis()).nextLong());
 
-        for ( i in ( 1 .. rand.nextInt( 100000000 ))){ j *= i }
-        for ( i in ( 1 .. rand.nextInt( 100000000 ))){ j -= i }
-        for ( i in ( 1 .. rand.nextInt( 100000000 ))){ j += i }
-        for ( i in ( 1 .. rand.nextInt( 100000000 ))){ j /= i }
-
-        return j;
+        10.times
+        {
+            double j = 1.0D;
+            for ( i in ( 1 .. ( rand.nextInt( 100000000 )))){ j *= i }
+            for ( i in ( 1 .. ( rand.nextInt( 100000000 )))){ j -= i }
+            for ( i in ( 1 .. ( rand.nextInt( 100000000 )))){ j += i }
+            for ( i in ( 1 .. ( rand.nextInt( 100000000 )))){ j /= i }
+        }
     }
 }
