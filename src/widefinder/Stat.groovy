@@ -23,11 +23,8 @@ class Stat extends Thread
     */
     private static L get( Map<String, L> map, String key )
     {
-        assert( key && ( map != null ));
-
         if ( ! map[ key ] ) { map[ key ] = new L() }
         L      counter = map[ key ];
-        assert counter;
         return counter;
     }
 
@@ -38,13 +35,8 @@ class Stat extends Thread
      */
     private static L get( Map<String, Map<String, L>> map, String key, String secondKey )
     {
-        assert( key && secondKey && ( map != null ));
-
         if ( ! map[ key ] ) { map[ key ] = new HashMap<String, L>() }
-
         Map<String, L> secondMap = map[ key ];
-        assert       ( secondMap != null );
-
         return get( secondMap, secondKey );
     }
 
@@ -84,13 +76,6 @@ class Stat extends Thread
     */
     void update( String clientAddress, String httpMethod, String uri, String statusCode, String byteCount, String referrer )
     {
-        assert ( clientAddress &&
-                 httpMethod    &&
-                 uri           &&
-                 statusCode    &&
-                 byteCount     &&
-                 ( referrer != null )); // "referrer" may be empty
-
         boolean isArticle = (( httpMethod == 'GET' )             &&
                              ( uri.startsWith( ARTICLE_PREFIX )) &&
                              ( ! uri.endsWith( '.png' ))         &&
@@ -118,8 +103,6 @@ class Stat extends Thread
      */
     private void addArticle( String articleUri, String clientAddress, String referrer )
     {
-        assert( articleUri && clientAddress );
-
         articlesToHitsCounter( articleUri ).increment();
         clientsToArticlesCounter( articleUri, clientAddress ).increment();
 
@@ -139,8 +122,6 @@ class Stat extends Thread
      */
     private void addUri( String uri, int bytes, boolean is404 )
     {
-        assert( uri );
-
         if ( bytes > 0 ) { uriToByteCountsCounter( uri ).add( bytes ) }
         if ( is404     ) { uriTo404Counter( uri ).increment()         }
     }

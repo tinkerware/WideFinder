@@ -13,6 +13,10 @@ final class StatUtils
     }
 
 
+
+   /**
+    *
+    */
     static Map<String, Long> sumAndSort( int n, Collection<Map<Long, Collection<String>>> maps )
     {
         Map<String, L> sumMap = new HashMap<String, L>();
@@ -28,8 +32,6 @@ final class StatUtils
                     String value ->
 
                     if ( ! sumMap[ value ] ) { sumMap[ value ] = new L() }
-
-                    assert sumMap[ value ];
                     sumMap[ value ].add( counter );
                 }
             }
@@ -45,8 +47,6 @@ final class StatUtils
      */
     private static Map<String, Long> top ( int n, Map<String, L> ... maps )
     {
-        assert (( n > 0 ) && ( maps != null ));
-
         Map<String, Long>             resultMap      = new LinkedHashMap<String, Long>( n );
         Map<Long, Collection<String>> topCountersMap = topCountersMap( n, maps );
 
@@ -63,12 +63,15 @@ final class StatUtils
              */
             topCountersMap[ topCounter ].each
             {
-                if ( resultMap.size() < n ) { resultMap.put( it, topCounter ) }
+                String s ->
+                if ( resultMap.size() < n )
+                {
+                    resultMap.put( s, topCounter )
+                }
             }
         }
 
-        assert ( resultMap.size() <= n );
-        return   resultMap;
+        return resultMap;
     }
 
 
@@ -78,8 +81,6 @@ final class StatUtils
      */
     static Map<String, Long> top ( int n, Map<String, Long> topArticles, Map<String, Map<String, L>> countersMap )
     {
-        assert ( topArticles.size() <= n );
-
         /**
          * Collection of maps (key => counter) corresponding to top articles
          */
@@ -109,8 +110,6 @@ final class StatUtils
     */
     static Map<Long, Collection<String>> topCountersMap ( int n, Map<String, L> ... maps )
     {
-        assert (( n > 0 ) && ( maps != null ));
-
         Map<Long, Collection<String>> topCountersMap = new HashMap<Long, Collection<String>>( n );
         long[]                        minCounter     = [ Long.MAX_VALUE ]; // Currently known minimal counter
 
@@ -122,8 +121,7 @@ final class StatUtils
             {
                 String key, L l ->
 
-                long     counter = l.counter();
-                assert ( counter > 0 );
+                long counter = l.counter();
 
                 if (( topCountersMap.size() == n ) && ( counter > minCounter[ 0 ] ) && ( ! topCountersMap[ counter ] ))
                 {
@@ -144,7 +142,6 @@ final class StatUtils
             }
         }
 
-        assert ( topCountersMap.size() <= n );
-        return   topCountersMap;
+        return topCountersMap;
     }
 }

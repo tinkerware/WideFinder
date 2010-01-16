@@ -94,10 +94,6 @@ class Start
             byte[]  array     = buffer.array();
             boolean isEof     = ( channel.position() == channel.size());
 
-            assert (( bytesRead > 0 ) &&
-                        (( bytesRead + remaining ) == buffer.position()) &&
-                            ( buffer.position()    <= array.length ));
-
             /**
              * Iterating through buffer, giving each thread it's own byte[] chunk to analyze:
              *
