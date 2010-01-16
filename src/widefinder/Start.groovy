@@ -10,7 +10,7 @@ class Start
    /**
     * Top N counter
     */
-//    static final int N = 10;  // TODO
+    static final int N = 10;
 
 
    /**
@@ -32,40 +32,61 @@ class Start
         final File file    = new File( args[ 0 ] );
         assert file.isFile(), "File [$file] is not available" ;
 
-        final long            t          = System.currentTimeMillis();
-        final int             N          = 10;
-        final int             coreNum    = Runtime.getRuntime().availableProcessors()
-        final ExecutorService pool       = Executors.newFixedThreadPool( coreNum, { Runnable r -> new Stat( r ) } );
-        final int             bufferSize = Math.min( file.size(), BUFFER_SIZE );
-        final ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
-        final FileInputStream fis        = new FileInputStream( file );
-        final FileChannel     channel    = fis.getChannel();
+        final long               t          = System.currentTimeMillis();
+        final int                coreNum    = Runtime.getRuntime().availableProcessors()
+        final ThreadPoolExecutor pool       = ( ThreadPoolExecutor ) Executors.newFixedThreadPool( coreNum, { Runnable r -> new Stat( r ) } );
+        final int                bufferSize = Math.min( file.size(), BUFFER_SIZE );
+        final ByteBuffer         buffer     = ByteBuffer.allocate( bufferSize );
+        final FileInputStream    fis        = new FileInputStream( file );
+        final FileChannel        channel    = fis.getChannel();
 
         processChannel( channel, buffer, pool, coreNum );
 
         channel.close();
         fis.close();
 
-        List<Future> futures = [];
-        coreNum.times
-        {
-            /**
-             * We want each thread to calculate it's own "top N" maps
-             */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( N ) })
-        }
-
-        List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
-        Map<String, Long>                         topArticlesToHits = StatUtils.sumAndSort( N, topMaps*.get( 0 ));
-        Map<String, Long>                         topUrisToBytes    = StatUtils.sumAndSort( N, topMaps*.get( 1 ));
-        Map<String, Long>                         topUrisTo404      = StatUtils.sumAndSort( N, topMaps*.get( 2 ));
-
-        report( "Top $N articles (by hits)",      topArticlesToHits );
-        report( "Top $N URIs (by bytes count)",   topUrisToBytes    );
-        report( "Top $N URIs (by 404 responses)", topUrisTo404      );
+        reportTopResults( N, pool );
 
         pool.shutdown();
         println "[${ System.currentTimeMillis() - t }] ms"
+    }
+
+
+
+   /**
+    * Reports all results
+    */
+    private static void reportTopResults ( int n, ThreadPoolExecutor pool )
+    {
+        List<Future> futures = [];
+        pool.getPoolSize().times
+        {
+            /**
+             * Each thread calculates it's own "top n" maps
+             */
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) })
+        }
+
+        List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
+        Map<String, Long>                         topArticlesToHits = StatUtils.sumAndTop( n, topMaps*.get( 0 ));
+        Map<String, Long>                         topUrisToBytes    = StatUtils.sumAndTop( n, topMaps*.get( 1 ));
+        Map<String, Long>                         topUrisTo404      = StatUtils.sumAndTop( n, topMaps*.get( 2 ));
+
+        futures = [];
+        pool.getPoolSize().times
+        {
+            /**
+             * Each thread calculates it's own "top n clients" maps (according to "hot articles" calculated previously)
+             */
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( n, topArticlesToHits.keySet()) })
+        }
+
+        Map<String, Long> topClientsToArticles = StatUtils.sumAndTop2( n, futures*.get());
+
+        report( "Top $n articles (by hits)",        topArticlesToHits    );
+        report( "Top $n URIs (by bytes count)",     topUrisToBytes       );
+        report( "Top $n URIs (by 404 responses)",   topUrisTo404         );
+        report( "Top $n clients (by hot articles)", topClientsToArticles );
     }
 
 
@@ -85,7 +106,7 @@ class Start
         /**
          * Reading from file channel into buffer (until it ends)
          */
-        for ( int remaining = 0; ( channel.position() < channel.size()); )
+        while ( channel.position() < channel.size())
         {
             int     bytesRead = channel.read( buffer );
             byte[]  array     = buffer.array();
@@ -135,7 +156,7 @@ class Start
                 }
 
                 /**
-                 * We want each thread to analyze it's own byte[] area and update the Stat instance (which is the thread itself)
+                 * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
                  */
                 futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
                 startIndex = endIndex;
@@ -146,10 +167,13 @@ class Start
              */
             futures*.get();
 
-            buffer.position( startIndex );  // Moving buffer's position a little back to last known "endIndex"
-            remaining = buffer.remaining(); // How many bytes are left unread in buffer
-            buffer.compact();               // Copying remaining (unread) bytes to beginning of buffer
-                                            // Next file read will be added to them
+            /**
+             * Moving buffer's position back to "startIndex" (last known "endIndex")
+             * and copying (compacting) remaining (unread) bytes to the beginning of buffer -
+             * next file read will be added to them
+             */
+            buffer.position( startIndex );
+            buffer.compact();
         }
     }
 

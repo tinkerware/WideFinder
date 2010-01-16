@@ -17,7 +17,7 @@ final class StatUtils
    /**
     *
     */
-    static Map<String, Long> sumAndSort( int n, Collection<Map<Long, Collection<String>>> maps )
+    static Map<String, Long> sumAndTop( int n, Collection<Map<Long, Collection<String>>> maps )
     {
         Map<String, L> sumMap = new HashMap<String, L>();
 
@@ -41,11 +41,30 @@ final class StatUtils
     }
 
 
+    static Map<String, Long> sumAndTop2( int n, Collection<Map<String, L>> maps )
+    {
+        Map<String, L> sumMap = new HashMap<String, L>();
+
+        maps.each
+        {
+            Map<String, L> map ->
+            map.each
+            {
+                String value, L counter ->
+                if ( ! sumMap[ value ] ){ sumMap[ value ] = new L() }
+                sumMap[ value ].add( counter.counter());
+            }
+        }
+
+        return top( n, sumMap );
+    }
+
+
     /**
      * Retrieves [values => counter] Map corresponding to the "top N" counters
      * in "maps" specified.
      */
-    private static Map<String, Long> top ( int n, Map<String, L> ... maps )
+    static Map<String, Long> top ( int n, Map<String, L> ... maps )
     {
         Map<String, Long>             resultMap      = new LinkedHashMap<String, Long>( n );
         Map<Long, Collection<String>> topCountersMap = topCountersMap( n, maps );
@@ -70,29 +89,6 @@ final class StatUtils
 
         return resultMap;
     }
-
-
-    /**
-     * Retrieves [values => counter] Map corresponding to the "top N" counters in the
-     * "countersMap" specified.
-     */
-    static Map<String, Long> top ( int n, Map<String, Long> topArticles, Map<String, Map<String, L>> countersMap )
-    {
-        /**
-         * Collection of maps (key => counter) corresponding to top articles
-         */
-        List<Map<String, L>> maps = new ArrayList<Map<String,L>>( n );
-
-        topArticles.keySet().each
-        {
-            String topArticle ->
-
-            if ( countersMap[ topArticle ] != null ) { maps << countersMap[ topArticle ] }
-        }
-
-        return top( n, maps.toArray( new Map<String, L>[ maps.size() ] ));
-    }
-
 
 
     /**

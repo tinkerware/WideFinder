@@ -149,12 +149,42 @@ class Stat extends Thread
         ]
 
         /**
-         * Nuking the raw data when it's no longer needed
+         * Nuking the raw data the moment it's no longer needed
          */
         setArticlesToHits ( null );
         setUriToByteCounts ( null );
         setUriTo404 ( null );
 
         return result;
+    }
+
+
+    Map<String, L> filterWithArticles( int n, Set<String> topArticles )
+    {
+        /**
+         * Maps (client address => articles hits) of clients accessing "hot articles"
+         * One map for each "hot article"
+         */
+        List<Map<String, L>> topArticlesClients = getArticlesToClients().keySet().
+                                                  // Filtering all known articles URIs with "top articles"
+                                                  findAll{ String articleUri -> topArticles.contains( articleUri )}.
+                                                  // Collecting a Map<String, L> (client address => article hits counter)
+                                                  // of clients for each filtered "article URI"
+                                                  collect{ String articleUri -> getArticlesToClients()[ articleUri ] };
+
+        Map<String, L> clientsMap = new HashMap<String,L>();
+        topArticlesClients.each
+        {
+            Map<String, L> map ->
+            map.each
+            {
+                String clientAddress, L counter ->
+
+                if ( ! clientsMap[ clientAddress ] ) { clientsMap[ clientAddress ] = new L() }
+                clientsMap[ clientAddress ].add( counter.counter());
+            }
+        }
+
+        return clientsMap;
     }
 }
