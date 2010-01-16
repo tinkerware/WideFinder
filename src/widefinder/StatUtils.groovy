@@ -54,7 +54,7 @@ final class StatUtils
         * Iterating over all counters sorted in decreasing order (from top to bottom)
         * and filling the result map (no more than n entries)
         */
-        topCountersMap.keySet().sort{ long a, long b -> ( b - a ) }.each
+        topCountersMap.keySet().sort{ long a, long b -> ( b <=> a ) }.each
         {
             long topCounter ->
 
@@ -64,10 +64,7 @@ final class StatUtils
             topCountersMap[ topCounter ].each
             {
                 String s ->
-                if ( resultMap.size() < n )
-                {
-                    resultMap.put( s, topCounter )
-                }
+                if ( resultMap.size() < n ) { resultMap[ s ] = topCounter }
             }
         }
 

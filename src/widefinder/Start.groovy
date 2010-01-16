@@ -29,13 +29,12 @@ class Start
 
     public static void main ( String[] args )
     {
-        final int  N       = 10;
-        final long t       = System.currentTimeMillis();
         final File file    = new File( args[ 0 ] );
-        final int  coreNum = Runtime.getRuntime().availableProcessors()
-
         assert file.isFile(), "File [$file] is not available" ;
 
+        final long            t          = System.currentTimeMillis();
+        final int             N          = 10;
+        final int             coreNum    = Runtime.getRuntime().availableProcessors()
         final List<Stat>      allStats   = [];
         final Closure         addStat    = { Stat s -> allStats << s; s }
         final ExecutorService pool       = Executors.newFixedThreadPool( coreNum, [ newThread : { Runnable r -> addStat( new Stat( r )) }] );
