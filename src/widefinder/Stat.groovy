@@ -6,7 +6,7 @@ import java.util.regex.Matcher
 /**
  * Statistics class
  */
-@Typed
+//@Typed
 class Stat extends Thread
 {
 

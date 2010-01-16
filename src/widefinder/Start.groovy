@@ -5,7 +5,7 @@ import java.nio.channels.FileChannel
 import java.util.concurrent.*
 
 
-@Typed
+//@Typed
 class Start
 {
    /**
@@ -34,14 +34,15 @@ class Start
         assert file.isFile(), "File [$file] is not available" ;
 
         final long               t          = System.currentTimeMillis();
-        final int                coreNum    = Runtime.getRuntime().availableProcessors()
-        final ThreadPoolExecutor pool       = ( ThreadPoolExecutor ) Executors.newFixedThreadPool( coreNum, { Runnable r -> new Stat( r ) } );
+        final ThreadPoolExecutor pool       =
+            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(),
+                                                                 { Runnable r -> new Stat( r ) } as ThreadFactory );
         final int                bufferSize = Math.min( file.size(), BUFFER_SIZE );
         final ByteBuffer         buffer     = ByteBuffer.allocate( bufferSize );
         final FileInputStream    fis        = new FileInputStream( file );
         final FileChannel        channel    = fis.getChannel();
 
-        processChannel( channel, buffer, pool, coreNum );
+        processChannel( channel, buffer, pool );
 
         channel.close();
         fis.close();
@@ -60,12 +61,12 @@ class Start
     private static void reportTopResults ( int n, ThreadPoolExecutor pool )
     {
         List<Future> futures = [];
-        pool.getPoolSize().times
+        pool.getCorePoolSize().times
         {
             /**
              * Each thread calculates it's own "top n" maps
              */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) })
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) } as Callable )
         }
 
         List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
@@ -74,13 +75,13 @@ class Start
         Map<String, Long>                         topUrisTo404      = StatUtils.sumAndTop( n, topMaps*.get( 2 ));
 
         futures = [];
-        pool.getPoolSize().times
+        pool.getCorePoolSize().times
         {
             /**
              * Each thread calculates it's own "top n clients/referrers" maps
              * (according to "top articles" calculated previously)
              */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) } as Callable )
         }
 
         List<List<Map<String, L>>> topArticlesMaps        = futures*.get();
@@ -104,7 +105,7 @@ class Start
    /**
     * Reads number of lines in the channel specified
     */
-    private static void processChannel ( FileChannel channel, ByteBuffer buffer, ExecutorService pool, int poolSize )
+    private static void processChannel ( FileChannel channel, ByteBuffer buffer, ThreadPoolExecutor pool )
     {
         buffer.rewind();
 
@@ -122,11 +123,11 @@ class Start
              *
              * "startIndex" - byte[] index where chunk starts (inclusive)
              * "endIndex"   - byte[] index where chunk ends (exclusive)
-             * "chunkSize"  - approximate size of byte[] chunk to be given to each thread             *
+             * "chunkSize"  - approximate size of byte[] chunk to be given to each thread
              * "chunk"      - array[ startIndex ] - array[ endIndex - 1 ]
              */
             int startIndex = 0;
-            int chunkSize  = ( buffer.position() / poolSize );
+            int chunkSize  = ( buffer.position() / pool.getCorePoolSize());
 
            /**
             * When chunk size is too small - we leave only a single chunk for a single thread
@@ -144,7 +145,7 @@ class Start
                 {
                     /**
                      * We're too close to end of buffer and there will be no more file reads
-                     * (that usually collect bytes left from the previous read) - expanding
+                     * (that normally would collect bytes left from the previous read) - expanding
                      * "endIndex" to the end current buffer
                      */
                     endIndex = buffer.position();
@@ -160,10 +161,14 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
+                final int threadStartIndex = startIndex;
+                final int threadEndIndex   = endIndex;
+
                 /**
                  * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
                  */
-                futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
+                futures << pool.submit({ processLines( array, threadStartIndex, threadEndIndex, (( Stat ) Thread.currentThread())) } as Runnable )
+
                 startIndex = endIndex;
             }
 

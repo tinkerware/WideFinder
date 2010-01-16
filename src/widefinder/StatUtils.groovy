@@ -4,7 +4,7 @@ package widefinder
 /**
  * Statistics aggregator utils
  */
-@Typed
+//@Typed
 final class StatUtils
 {
 
