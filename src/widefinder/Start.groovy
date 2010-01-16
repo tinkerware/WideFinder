@@ -5,7 +5,7 @@ import java.nio.channels.FileChannel
 import java.util.concurrent.*
 
 
-//@Typed
+@Typed
 class Start
 {
    /**
@@ -35,8 +35,7 @@ class Start
 
         final long               t          = System.currentTimeMillis();
         final ThreadPoolExecutor pool       =
-            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(),
-                                                                 { Runnable r -> new Stat( r ) } as ThreadFactory );
+            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(), { Runnable r -> new Stat( r ) });
         final int                bufferSize = Math.min( file.size(), BUFFER_SIZE );
         final ByteBuffer         buffer     = ByteBuffer.allocate( bufferSize );
         final FileInputStream    fis        = new FileInputStream( file );
@@ -66,7 +65,7 @@ class Start
             /**
              * Each thread calculates it's own "top n" maps
              */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) } as Callable )
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) })
         }
 
         List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
@@ -81,7 +80,7 @@ class Start
              * Each thread calculates it's own "top n clients/referrers" maps
              * (according to "top articles" calculated previously)
              */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) } as Callable )
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
         }
 
         List<List<Map<String, L>>> topArticlesMaps        = futures*.get();
@@ -161,13 +160,14 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
-                final int threadStartIndex = startIndex;
-                final int threadEndIndex   = endIndex;
-
                 /**
                  * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
+                 * Creating final copies: in dynamic Groovy without finals - variables were bounded differently
                  */
-                futures << pool.submit({ processLines( array, threadStartIndex, threadEndIndex, (( Stat ) Thread.currentThread())) } as Runnable )
+                // TODO - http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
+                final int threadStartIndex = startIndex;
+                final int threadEndIndex   = endIndex;
+                futures << pool.submit({ processLines( array, threadStartIndex, threadEndIndex, (( Stat ) Thread.currentThread())) })
 
                 startIndex = endIndex;
             }

@@ -6,7 +6,7 @@ import java.util.regex.Matcher
 /**
  * Statistics class
  */
-//@Typed
+@Typed
 class Stat extends Thread
 {
 
@@ -208,7 +208,7 @@ class Stat extends Thread
                                                * for each URI that is left after "top articles" filtering
                                                */
                                                collect{ String articleUri -> valuesMaps[ articleUri ] };
-        
+
         /**
          * Result map (String value => articles hits):
          * summarizing all above (smaller) maps for all "top articles" (one smaller map per "top article")
