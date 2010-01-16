@@ -26,7 +26,7 @@ class C
         {
             String line ->
 
-            if ( line.startsWith( 'localhost' ))
+            if ( line.contains( '"http://mixi.jp/view_diary.pl?id=469784001&owner_id=5543"' ) /* line.startsWith( 'localhost' ) */)
             {
                 String  uri = line.find( /"GET (.+) HTTP/ ){ it[ 1 ] }
                 if ( uris.contains( uri ))
