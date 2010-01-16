@@ -1,0 +1,58 @@
+
+E:\Projects\groovy-booster>d:\Winny\Java\jdk1.6.0_18\bin\java.exe -server -Xmx1024m -cp d:\Winny\Java\groovy-booster\lib/*;out widefinder.Start data\O.Big.log
+>>> Top 10 articles (by hits) <<<:
+* /ongoing/When/200x/2007/06/17/Web3S : 86680
+* /ongoing/When/200x/2007/06/17/Tokyo-Playing : 38170
+* /ongoing/When/200x/2003/09/18/NXML : 27060
+* /ongoing/When/200x/2007/06/16/X-Me-is-a-Facebook-Virus : 20020
+* /ongoing/When/200x/2007/06/17/Fathers-Day : 16500
+* /ongoing/When/200x/2007/06/16/Tokyo-Phone : 11880
+* /ongoing/When/200x/2007/06/15/Cameras : 11770
+* /ongoing/When/200x/2004/02/20/GenxStatus : 9680
+* /ongoing/When/200x/2007/06/14/RFC4287 : 8800
+* /ongoing/When/200x/2006/03/30/Teacup : 7920
+>>> Top 10 URIs (by bytes count) <<<:
+* /ongoing/ongoing.atom : 98563153260
+* /ongoing/When/200x/2007/06/17/IMGP5702.png : 89148200130
+* /ongoing/When/200x/2007/06/17/IMGP5705.png : 68409879560
+* /ongoing/When/200x/2007/06/17/IMGP5709.png : 52341942950
+* /ongoing/When/200x/2007/06/17/IMGP5714.png : 45546931210
+* /ongoing/When/200x/2007/06/15/IMGP5923.png : 19206082610
+* /ongoing/potd.png : 16615497580
+* /ongoing/When/200x/2007/06/16/IMGP5678.png : 13610314190
+* /ongoing/When/200x/2006/03/30/IMG_4613.png : 11730656190
+* /ongoing/When/200x/2007/06/15/IMGP5832.png : 9946931610
+>>> Top 10 URIs (by 404 responses) <<<:
+* /ongoing/IMGP5702.png : 11990
+* /ongoing/IMGP5705.png : 11880
+* /ongoing/IMGP5923.png : 11550
+* /ongoing/IMGP5678.png : 11550
+* /ongoing/IMGP5832.png : 11440
+* /ongoing/IMGP5714.png : 11220
+* /ongoing/IMGP5709.png : 11220
+* /ongoing/IMGP5786.png : 9350
+* /ongoing/IMGP5731.png : 9350
+* /ongoing/IMGP5655.png : 9350
+>>> Top 10 clients (by top articles) <<<:
+* wahoo.stanford.edu : 2970
+* crawl-66-249-66-14.googlebot.com : 2750
+* localhost : 1760
+* host-0021.tailrank.com : 1650
+* proxy01-hcm.vnn.vn : 1540
+* 74-132-162-108.dhcp.insightbb.com : 1430
+* 206.55.118.252 : 1320
+* fatwire-35-165.uniserve.ca : 1210
+* host-0018.tailrank.com : 1100
+* isa01.hsdrenthe.nl : 1100
+>>> Top 10 referrers (by top articles) <<<:
+* http://www.tbray.org/ongoing/ : 32010
+* http://www.google.com/reader/view/ : 18920
+* http://programming.reddit.com/ : 14190
+* http://programming.reddit.com/new : 3850
+* http://mixi.jp/view_diary.pl?id=469754300&owner_id=6630 : 2860
+* http://www.tbray.org/ongoing/When/200x/2007/06/17/Web3S : 1760
+* http://mixi.jp/view_diary.pl?id=469784001&owner_id=5543 : 1760
+* http://planet.intertwingly.net/ : 1430
+* http://www.tbray.org/ongoing/When/200x/2007/06/17/Fathers-Day : 1320
+* http://planet.xmlhack.com/ : 1320
+[40709] ms
