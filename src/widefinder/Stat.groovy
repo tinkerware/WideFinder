@@ -51,11 +51,11 @@ class Stat extends Thread
    /**
     * Maps holding all statistical data
     */
-    final Map<String, L>              articlesToHits      = new HashMap<String, L>();
-    final Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
-    final Map<String, L>              uriTo404            = new HashMap<String, L>();
-    final Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
-    final Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
+    Map<String, L>              articlesToHits      = new HashMap<String, L>();
+    Map<String, L>              uriToByteCounts     = new HashMap<String, L>();
+    Map<String, L>              uriTo404            = new HashMap<String, L>();
+    Map<String, Map<String, L>> articlesToClients   = new HashMap<String, Map<String, L>>();
+    Map<String, Map<String, L>> articlesToReferrers = new HashMap<String, Map<String, L>>();
 
 
    /**
@@ -141,10 +141,20 @@ class Stat extends Thread
     */
     List<Map<Long, Collection<String>>> calculateTop( int n )
     {
+        List<Map<Long, Collection<String>>> result =
         [
             StatUtils.topCountersMap( n, getArticlesToHits()),
             StatUtils.topCountersMap( n, getUriToByteCounts()),
             StatUtils.topCountersMap( n, getUriTo404())
         ]
+
+        /**
+         * Nuking the raw data when it's no longer needed
+         */
+        setArticlesToHits ( null );
+        setUriToByteCounts ( null );
+        setUriTo404 ( null );
+
+        return result;
     }
 }

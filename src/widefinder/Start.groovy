@@ -27,7 +27,7 @@ class Start
     private static final byte SPACE = 0x20; // " "
 
 
-    public static void main ( String[] args )
+    public static void main ( String ... args )
     {
         final File file    = new File( args[ 0 ] );
         assert file.isFile(), "File [$file] is not available" ;
