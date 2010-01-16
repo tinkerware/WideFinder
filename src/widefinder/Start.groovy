@@ -4,6 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.util.concurrent.*
 
+
 @Typed
 class Start
 {
@@ -76,17 +77,21 @@ class Start
         pool.getPoolSize().times
         {
             /**
-             * Each thread calculates it's own "top n clients" maps (according to "hot articles" calculated previously)
+             * Each thread calculates it's own "top n clients/referrers" maps
+             * (according to "top articles" calculated previously)
              */
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( n, topArticlesToHits.keySet()) })
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
         }
 
-        Map<String, Long> topClientsToArticles = StatUtils.sumAndTop2( n, futures*.get());
+        List<List<Map<String, L>>> topArticlesMaps        = futures*.get();
+        Map<String, Long>          topClientsToArticles   = StatUtils.sumAndTop2( n, topArticlesMaps*.get( 0 ));
+        Map<String, Long>          topReferrersToArticles = StatUtils.sumAndTop2( n, topArticlesMaps*.get( 1 ));
 
-        report( "Top $n articles (by hits)",        topArticlesToHits    );
-        report( "Top $n URIs (by bytes count)",     topUrisToBytes       );
-        report( "Top $n URIs (by 404 responses)",   topUrisTo404         );
-        report( "Top $n clients (by hot articles)", topClientsToArticles );
+        report( "Top $n articles (by hits)",          topArticlesToHits      );
+        report( "Top $n URIs (by bytes count)",       topUrisToBytes         );
+        report( "Top $n URIs (by 404 responses)",     topUrisTo404           );
+        report( "Top $n clients (by top articles)",   topClientsToArticles   );
+        report( "Top $n referrers (by top articles)", topReferrersToArticles );
     }
 
 

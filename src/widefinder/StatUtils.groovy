@@ -15,7 +15,10 @@ final class StatUtils
 
 
    /**
+    * Summarizes counter values for the maps specified and finds "top N" resulting counters
     *
+    * Returns a Map<String, Long> (of size <= n) iterating on which one can see all String values
+    * (from the maps passed) and their corresponding counters, from biggest counter to the smaller ones
     */
     static Map<String, Long> sumAndTop( int n, Collection<Map<Long, Collection<String>>> maps )
     {
@@ -37,10 +40,16 @@ final class StatUtils
             }
         }
 
-        return top( n, sumMap );
+        return topN( n, sumMap );
     }
 
 
+    /**
+     * Summarizes counter values for the maps specified and finds "top N" resulting counters
+     *
+     * Returns a Map<String, Long> (of size <= n) iterating on which one can see all String values
+     * (from the maps passed) and their corresponding counters, from biggest counter to the smaller ones
+     */
     static Map<String, Long> sumAndTop2( int n, Collection<Map<String, L>> maps )
     {
         Map<String, L> sumMap = new HashMap<String, L>();
@@ -56,15 +65,15 @@ final class StatUtils
             }
         }
 
-        return top( n, sumMap );
+        return topN( n, sumMap );
     }
 
 
     /**
-     * Retrieves [values => counter] Map corresponding to the "top N" counters
+     * Retrieves [String value => counter] Map corresponding to the "top N" counters
      * in "maps" specified.
      */
-    static Map<String, Long> top ( int n, Map<String, L> ... maps )
+    private static Map<String, Long> topN ( int n, Map<String, L> ... maps )
     {
         Map<String, Long>             resultMap      = new LinkedHashMap<String, Long>( n );
         Map<Long, Collection<String>> topCountersMap = topCountersMap( n, maps );
@@ -92,11 +101,11 @@ final class StatUtils
 
 
     /**
-    * Creates a small "top counters" Map (of size n) from a BIG "key => counter" maps:
+    * Creates a small "top counters" Map (of size <= n) from a bigger "key => counter" maps:
     *
-    * - Key (Long)                 - top n counters found in the map specified
-    * - Value (Collection<String>) - original map's keys that were mapped to that key (counter).
-    *                                (no more than n)
+    * - Key (Long)                 - top n counters found in maps specified
+    * - Value (Collection<String>) - original map's keys that were mapped to that key (counter),
+    *                                no more than n
     *
     * "Top n counter" means that a counter is in "top n" elements if all original counters
     * (values of the map specified) were sorted but we use no sorting here since it's not needed.

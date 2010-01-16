@@ -134,10 +134,10 @@ class Stat extends Thread
     * - 'uri to bytes' map
     * - 'uri to missed (404)' map
     *
-    * Returns a list of 3 "top N counters" maps.
+    * Returns a list of 3 Map<Long, Collection<String>>.
     * Each map:
     * Key   - a counter in the "top N" counters
-    * Value - list of String values corresponding to that counter
+    * Value - collection of String values corresponding to that counter
     */
     List<Map<Long, Collection<String>>> calculateTop( int n )
     {
@@ -149,7 +149,7 @@ class Stat extends Thread
         ]
 
         /**
-         * Nuking the raw data the moment it's no longer needed
+         * Nuking raw data the moment it's no longer needed
          */
         setArticlesToHits ( null );
         setUriToByteCounts ( null );
@@ -159,32 +159,74 @@ class Stat extends Thread
     }
 
 
-    Map<String, L> filterWithArticles( int n, Set<String> topArticles )
+
+   /**
+    * Filters article-related Maps:
+    * - 'articles to clients' map
+    * - 'articles to referrers' map
+    *
+    * Returns a list of 2 Map<String, L>
+    * Each map:
+    * Key   - client address / referrer (accessing one of "top articles")
+    * Value - counter, a number of time this access was made
+    */
+    List<Map<String, L>> filterWithArticles( Set<String> topArticles )
+    {
+        List<Map<String, L>> result =
+        [
+            filterWithArticles( topArticles, getArticlesToClients()),
+            filterWithArticles( topArticles, getArticlesToReferrers()),
+        ]
+
+        /**
+         * Nuking raw data the moment it's no longer needed
+         */
+        setArticlesToClients( null );
+        setArticlesToReferrers( null );
+
+        return result;
+    }
+
+
+
+   /**
+    * Filters an article-related "valuesMaps" (like map of clients or referrers) with "top articles" specified
+    */
+    private Map<String, L> filterWithArticles( Set<String> topArticles, Map<String, Map<String, L>> valuesMaps )
     {
         /**
-         * Maps (client address => articles hits) of clients accessing "hot articles"
-         * One map for each "hot article"
+         * Maps (String value => articles hits) of "top articles" accesses
+         * One map for each "top article" - they're summarized below into one bigger Map<String, L>
          */
-        List<Map<String, L>> topArticlesClients = getArticlesToClients().keySet().
-                                                  // Filtering all known articles URIs with "top articles"
-                                                  findAll{ String articleUri -> topArticles.contains( articleUri )}.
-                                                  // Collecting a Map<String, L> (client address => article hits counter)
-                                                  // of clients for each filtered "article URI"
-                                                  collect{ String articleUri -> getArticlesToClients()[ articleUri ] };
-
-        Map<String, L> clientsMap = new HashMap<String,L>();
-        topArticlesClients.each
+        List<Map<String, L>> topArticlesMaps = valuesMaps.keySet().
+                                              /**
+                                               * Filtering out URIs which are not from "top articles" Set
+                                               */
+                                               findAll{ String articleUri -> topArticles.contains( articleUri )}.
+                                              /**
+                                               * Collecting a Map<String, L> (String value => article hits counter)
+                                               * for each URI that is left after "top articles" filtering
+                                               */
+                                               collect{ String articleUri -> valuesMaps[ articleUri ] };
+        
+        /**
+         * Result map (String value => articles hits):
+         * summarizing all above (smaller) maps for all "top articles" (one smaller map per "top article")
+         * into one bigger Map<String, L>
+         */
+        Map<String, L> resultMap = new HashMap<String,L>();
+        topArticlesMaps.each
         {
             Map<String, L> map ->
             map.each
             {
-                String clientAddress, L counter ->
+                String value, L counter ->
 
-                if ( ! clientsMap[ clientAddress ] ) { clientsMap[ clientAddress ] = new L() }
-                clientsMap[ clientAddress ].add( counter.counter());
+                if ( ! resultMap[ value ] ) { resultMap[ value ] = new L() }
+                resultMap[ value ].add( counter.counter());
             }
         }
 
-        return clientsMap;
+        return resultMap;
     }
 }
