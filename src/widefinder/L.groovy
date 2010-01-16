@@ -11,13 +11,6 @@ class L
 
     L ()
     {
-        this.counter = 0;
-    }
-
-
-    L ( long value )
-    {
-        this.counter = value;
     }
 
 
