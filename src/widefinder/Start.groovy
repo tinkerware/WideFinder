@@ -10,7 +10,13 @@ class Start
    /**
     * Top N counter
     */
-    private static final int N = 10;
+    static final int N = 10;
+
+
+   /**
+    * Buffer size (in megabytes) for reading the file
+    */
+    private static final int BUFFER_SIZE = ( 10 * 1024 * 1024 );
 
 
     /**
@@ -29,28 +35,28 @@ class Start
 
         assert file.isFile(), "File [$file] is not available" ;
 
-        ExecutorService pool       = Executors.newFixedThreadPool( coreNum, [ newThread : { Runnable r -> new Stat( r ) } ] );
-        int             bufferSize = Math.min( file.size(), ( 10 * 1024 * 1024 ));
-        ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
-        FileInputStream fis        = new FileInputStream( file );
-        FileChannel     channel    = fis.getChannel();
+        final List<Stat>      allStats   = [];
+        final Closure         addStat    = { Stat s -> allStats << s; s }
+        final ExecutorService pool       = Executors.newFixedThreadPool( coreNum, [ newThread : { Runnable r -> addStat( new Stat( r )) }] );
+        final int             bufferSize = Math.min( file.size(), BUFFER_SIZE );
+        final ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
+        final FileInputStream fis        = new FileInputStream( file );
+        final FileChannel     channel    = fis.getChannel();
 
         processChannel( channel, buffer, pool, coreNum );
 
         channel.close();
         fis.close();
+
+        List<Future> futures = [];
+        coreNum.times
+        {
+            futures << pool.submit(( Callable )[ call : { (( Stat ) Thread.currentThread()).calculateTop( N ) }])
+        }
+
+        List<List<Map<Long, Collection<String>>>> topMaps = futures*.get()
+
         pool.shutdown();
-
-/*
-        Map<String, Long> topArticles = StatUtils.top( N, stat.articlesToHits());
-
-        report( "Top $N articles (by hits)",          topArticles );
-        report( "Top $N URIs (by bytes count)",       StatUtils.top( N, stat.uriToByteCounts()));
-        report( "Top $N URIs (by 404 responses)",     StatUtils.top( N, stat.uriTo404()));
-        report( "Top $N clients (by hot articles)",   StatUtils.top( N, topArticles, stat.articlesToClients()));
-        report( "Top $N referrers (by hot articles)", StatUtils.top( N, topArticles, stat.articlesToReferrers()));
-*/
-
         println "[${ System.currentTimeMillis() - t }] ms"
     }
 

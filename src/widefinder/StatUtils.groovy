@@ -81,7 +81,7 @@ final class StatUtils
     * "Top n counter" means that a counter is in "top n" elements if all original counters
     * (values of the map specified) were sorted but we use no sorting here since it's not needed.
     */
-    private static Map<Long, Collection<String>> topCountersMap ( int n, Map<String, L> ... maps )
+    static Map<Long, Collection<String>> topCountersMap ( int n, Map<String, L> ... maps )
     {
         assert (( n > 0 ) && ( maps != null ));
 

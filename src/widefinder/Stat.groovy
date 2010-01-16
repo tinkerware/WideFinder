@@ -144,4 +144,26 @@ class Stat extends Thread
         if ( bytes > 0 ) { uriToByteCountsCounter( uri ).add( bytes ) }
         if ( is404     ) { uriTo404Counter( uri ).increment()         }
     }
+
+
+
+   /**
+    * Calculates "top N" counters for:
+    * - 'articles to hits' map
+    * - 'uri to bytes' map
+    * - 'uri to missed (404)' map
+    *
+    * Returns a list of 3 "top N counters" maps.
+    * Each map:
+    * Key   - a counter in the "top N" counters
+    * Value - list of String values corresponding to that counter
+    */
+    List<Map<Long, Collection<String>>> calculateTop( int n )
+    {
+        [
+            StatUtils.topCountersMap( n, getArticlesToHits()),
+            StatUtils.topCountersMap( n, getUriToByteCounts()),
+            StatUtils.topCountersMap( n, getUriTo404())
+        ]
+    }
 }
