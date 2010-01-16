@@ -46,13 +46,18 @@ class L
     }
 
 
+   /**
+    * If L is ever used as map key .. Not today.
+    */
+
+
     @Override
     int hashCode ()
     {
         return counter().hashCode();
     }
 
-    
+
     @Override
     boolean equals ( Object obj )
     {
