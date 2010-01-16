@@ -52,10 +52,20 @@ class Start
         List<Future> futures = [];
         coreNum.times
         {
+            /**
+             * We want each thread to calculate it's own "top N" maps
+             */
             futures << pool.submit(( Callable )[ call : { (( Stat ) Thread.currentThread()).calculateTop( N ) }])
         }
 
-        List<List<Map<Long, Collection<String>>>> topMaps = futures*.get()
+        List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
+        Map<String, Long>                         topArticlesToHits = StatUtils.sumAndSort( N, topMaps*.get( 0 ));
+        Map<String, Long>                         topUrisToBytes    = StatUtils.sumAndSort( N, topMaps*.get( 1 ));
+        Map<String, Long>                         topUrisTo404      = StatUtils.sumAndSort( N, topMaps*.get( 2 ));
+
+        report( "Top $N articles (by hits)",      topArticlesToHits );
+        report( "Top $N URIs (by bytes count)",   topUrisToBytes    );
+        report( "Top $N URIs (by 404 responses)", topUrisTo404      );
 
         pool.shutdown();
         println "[${ System.currentTimeMillis() - t }] ms"
@@ -66,7 +76,6 @@ class Start
     {
         println ">>> $title <<<: \n* ${ map.entrySet().collect{ Map.Entry entry -> "${ entry.key } : ${ entry.value }" }.join( "\n* " ) }"
     }
-
 
 
    /**
@@ -132,10 +141,16 @@ class Start
                     while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
                 }
 
+                /**
+                 * We want each thread to analyze it's own byte[] area and update the Stat instance (which is the thread itself)
+                 */
                 futures << pool.submit(( Runnable )[ run : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) }])
                 startIndex = endIndex;
             }
 
+            /**
+             * Blocking till each thread finishes
+             */
             futures*.get();
 
             buffer.position( startIndex );  // Moving buffer's position a little back to last known "endIndex"

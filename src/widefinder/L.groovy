@@ -11,19 +11,18 @@ class L
 
     L ()
     {
+        this.counter = 0;
     }
 
 
     L ( long value )
     {
-        assert ( value >= 0 );
         this.counter = value;
     }
 
 
     void add ( long l )
     {
-        assert ( l > 0 );
         this.counter += l;
     }
 
@@ -46,12 +45,14 @@ class L
         return String.valueOf( counter());
     }
 
+
     @Override
     int hashCode ()
     {
         return counter().hashCode();
     }
 
+    
     @Override
     boolean equals ( Object obj )
     {

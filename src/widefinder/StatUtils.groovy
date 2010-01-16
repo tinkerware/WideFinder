@@ -13,11 +13,37 @@ final class StatUtils
     }
 
 
+    static Map<String, Long> sumAndSort( int n, Collection<Map<Long, Collection<String>>> maps )
+    {
+        Map<String, L> sumMap = new HashMap<String, L>();
+
+        maps.each
+        {
+            Map<Long, Collection<String>> map ->
+            map.each
+            {
+                Long counter, Collection<String> values ->
+                values.each
+                {
+                    String value ->
+
+                    if ( ! sumMap[ value ] ) { sumMap[ value ] = new L() }
+
+                    assert sumMap[ value ];
+                    sumMap[ value ].add( counter );
+                }
+            }
+        }
+
+        return top( n, sumMap );
+    }
+
+
     /**
      * Retrieves [values => counter] Map corresponding to the "top N" counters
      * in "maps" specified.
      */
-    static Map<String, Long> top ( int n, Map<String, L> ... maps )
+    private static Map<String, Long> top ( int n, Map<String, L> ... maps )
     {
         assert (( n > 0 ) && ( maps != null ));
 
