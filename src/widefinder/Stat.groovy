@@ -13,7 +13,6 @@ class Stat extends Thread
     Stat ( Runnable r )
     {
         super( r )
-        println "[${ this }] created"
     }
 
 
