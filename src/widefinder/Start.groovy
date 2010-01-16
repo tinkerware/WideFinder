@@ -10,7 +10,7 @@ class Start
    /**
     * Top N counter
     */
-    static final int N = 10;
+//    static final int N = 10;  // TODO
 
 
    /**
@@ -29,6 +29,7 @@ class Start
 
     public static void main ( String[] args )
     {
+        final int  N       = 10;
         final long t       = System.currentTimeMillis();
         final File file    = new File( args[ 0 ] );
         final int  coreNum = Runtime.getRuntime().availableProcessors()
