@@ -35,9 +35,7 @@ class Start
         final long            t          = System.currentTimeMillis();
         final int             N          = 10;
         final int             coreNum    = Runtime.getRuntime().availableProcessors()
-        final List<Stat>      allStats   = [];
-        final Closure         addStat    = { Stat s -> allStats << s; s }
-        final ExecutorService pool       = Executors.newFixedThreadPool( coreNum, [ newThread : { Runnable r -> addStat( new Stat( r )) }] );
+        final ExecutorService pool       = Executors.newFixedThreadPool( coreNum, { Runnable r -> new Stat( r ) } );
         final int             bufferSize = Math.min( file.size(), BUFFER_SIZE );
         final ByteBuffer      buffer     = ByteBuffer.allocate( bufferSize );
         final FileInputStream fis        = new FileInputStream( file );
@@ -207,7 +205,8 @@ class Start
                 else
                 {
                     /**
-                     * We've found all tokens ("referrer" was the last one) - updating statistics
+                     * We've found all tokens ("referrer" was the last one) - updating statistics,
+                     * adding the data read from the current line
                      */
                     stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
 
