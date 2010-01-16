@@ -54,7 +54,7 @@ class Start
             /**
              * We want each thread to calculate it's own "top N" maps
              */
-            futures << pool.submit(( Callable )[ call : { (( Stat ) Thread.currentThread()).calculateTop( N ) }])
+            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( N ) })
         }
 
         List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
@@ -139,7 +139,7 @@ class Start
                 /**
                  * We want each thread to analyze it's own byte[] area and update the Stat instance (which is the thread itself)
                  */
-                futures << pool.submit(( Runnable )[ run : { processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) }])
+                futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
                 startIndex = endIndex;
             }
 
