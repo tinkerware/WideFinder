@@ -89,7 +89,7 @@ class Stat extends Thread
         }
 
         addUri( uri,
-                (( byteCount != '-' ) ? Integer.parseInt( byteCount, 10 ) : 0 ),
+                ( byteCount.contains( '-' ) ? 0 : Integer.parseInt( byteCount, 10 )),
                 ( statusCode == '404' ));
     }
 

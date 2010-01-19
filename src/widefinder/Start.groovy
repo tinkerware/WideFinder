@@ -33,13 +33,16 @@ class Start
         final File file    = new File( args[ 0 ] );
         assert file.isFile(), "File [$file] is not available" ;
 
-        final long               t          = System.currentTimeMillis();
-        final ThreadPoolExecutor pool       =
-            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(), { Runnable r -> new Stat( r ) });
-        final int                bufferSize = Math.min( file.size(), BUFFER_SIZE );
-        final ByteBuffer         buffer     = ByteBuffer.allocate( bufferSize );
-        final FileInputStream    fis        = new FileInputStream( file );
-        final FileChannel        channel    = fis.getChannel();
+        final long               t           = System.currentTimeMillis();
+        final int                nProcessors = Runtime.getRuntime().availableProcessors()
+        final ThreadPoolExecutor pool        =
+            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( nProcessors, { Runnable r -> new Stat( r ) });
+        final int                bufferSize  = Math.min( file.size(), BUFFER_SIZE );
+        final ByteBuffer         buffer      = ByteBuffer.allocate( bufferSize );
+        final FileInputStream    fis         = new FileInputStream( file );
+        final FileChannel        channel     = fis.getChannel();
+
+        println "[$nProcessors] processors available"
 
         processChannel( channel, buffer, pool );
 
