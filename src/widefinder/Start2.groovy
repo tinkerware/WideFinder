@@ -6,18 +6,12 @@ import java.util.concurrent.*
 
 
 @Typed
-class Start
+class Start2
 {
    /**
     * Top N counter
     */
     static final int N = 10;
-
-
-   /**
-    * Buffer size (in megabytes) for reading the file
-    */
-    private static final int BUFFER_SIZE = ( 10 * 1024 * 1024 );
 
 
     /**
@@ -35,18 +29,11 @@ class Start
 
         final long               t          = System.currentTimeMillis();
         final ThreadPoolExecutor pool       =
-            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(), { Runnable r -> new Stat( r ) });
-        final int                bufferSize = Math.min( file.size(), BUFFER_SIZE );
-        final ByteBuffer         buffer     = ByteBuffer.allocate( bufferSize );
-        final FileInputStream    fis        = new FileInputStream( file );
-        final FileChannel        channel    = fis.getChannel();
+            ( ThreadPoolExecutor ) Executors.newFixedThreadPool(
+                    200,
+                    { Runnable r -> new Stat( r ) });
 
-        processChannel( channel, buffer, pool );
-
-        channel.close();
-        fis.close();
-
-        reportTopResults( N, pool );
+        processFile( file, pool );
 
         pool.shutdown();
         println "[${ System.currentTimeMillis() - t }] ms"
@@ -100,96 +87,90 @@ class Start
         println ">>> $title <<<: \n* ${ map.entrySet().collect{ Map.Entry entry -> "${ entry.key } : ${ entry.value }" }.join( "\n* " ) }"
     }
 
+    static final ByteBuffer stop = ByteBuffer.allocate(1)
+
+    static void processChannel (FileChannel channel, long start, long end) {
+    }
 
    /**
     * Reads number of lines in the channel specified
     */
-    private static void processChannel ( FileChannel channel, ByteBuffer buffer, ThreadPoolExecutor pool )
+    private static void processFile ( File file, ThreadPoolExecutor pool )
     {
-        buffer.rewind();
+        final def fis     = new FileInputStream( file );
+        final def channel = fis.getChannel();
 
-        /**
-         * Reading from file channel into buffer (until it ends)
-         */
-        while ( channel.position() < channel.size())
-        {
-            int     bytesRead = channel.read( buffer );
-            byte[]  array     = buffer.array();
-            boolean isEof     = ( channel.position() == channel.size());
+        final ArrayBlockingQueue<ByteBuffer> queue       = new ArrayBlockingQueue<ByteBuffer>(4)
+        final ArrayBlockingQueue<ByteBuffer> freeBuffers = new ArrayBlockingQueue<ByteBuffer>(4)
 
-            /**
-             * Iterating through buffer, giving each thread it's own byte[] chunk to analyze:
-             *
-             * "startIndex" - byte[] index where chunk starts (inclusive)
-             * "endIndex"   - byte[] index where chunk ends (exclusive)
-             * "chunkSize"  - approximate size of byte[] chunk to be given to each thread
-             * "chunk"      - array[ startIndex ] - array[ endIndex - 1 ]
-             */
-            int startIndex = 0;
-            int chunkSize  = ( buffer.position() / pool.getCorePoolSize());
+        pool.execute {
+            while (true) {
+                def buffer = queue.take()
+                if (buffer === stop)
+                    break;
 
-           /**
-            * When chunk size is too small - we leave only a single chunk for a single thread
-            */
-            if ( chunkSize < 1024 ) { chunkSize = buffer.position() }
+                processLines(buffer.array(), 0, buffer.position(), (Stat) Thread.currentThread())
 
-            /**
-             * List of Futures from processing threads
-             */
-            List<Future> futures = [];
-
-            for ( int endIndex = chunkSize; ( endIndex <= buffer.position()); endIndex += chunkSize )
-            {
-                if ((( buffer.position() - endIndex ) < chunkSize ) && ( isEof ))
-                {
-                    /**
-                     * We're too close to end of buffer and there will be no more file reads
-                     * (that normally would collect bytes left from the previous read) - expanding
-                     * "endIndex" to the end current buffer
-                     */
-                    endIndex = buffer.position();
-                }
-                else
-                {
-                    /**
-                     * Looking for closest "end of line" bytes sequence (that may spread over multiple bytes)
-                     * so that array[ endIndex - 1 ] is an *end* of "end of line" bytes sequence
-                     */
-
-                    while (( endIndex < buffer.position()) && (   endOfLine( array[ endIndex     ] ))) { endIndex++ }
-                    while (( endIndex > 0 )                && ( ! endOfLine( array[ endIndex - 1 ] ))) { endIndex-- }
-                }
-
-                /**
-                 * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
-                 * Creating final copies: in dynamic Groovy without finals - variables were bounded differently
-                 */
-                // TODO - http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
-                final int threadStartIndex = startIndex;
-                final int threadEndIndex   = endIndex;
-                futures << pool.submit({ processLines( array, threadStartIndex, threadEndIndex, (( Stat ) Thread.currentThread())) })
-
-                startIndex = endIndex;
+                freeBuffers << buffer
             }
 
-            /**
-             * Blocking till each thread finishes
-             */
-            futures*.get();
+            List<Map<Long, Collection<String>>> topMap = ((Stat)Thread.currentThread()).calculateTop( n );
 
-            /**
-             * Moving buffer's position back to "startIndex" (last known "endIndex")
-             * and copying (compacting) remaining (unread) bytes to the beginning of buffer -
-             * next file read will be added to them
-             */
-            buffer.position( startIndex );
-            buffer.compact();
+            Map<String, Long>                         topArticlesToHits = StatUtils.sumAndTop( n, [topMap.get( 0 )])
+            Map<String, Long>                         topUrisToBytes    = StatUtils.sumAndTop( n, [topMap.get( 1 )])
+            Map<String, Long>                         topUrisTo404      = StatUtils.sumAndTop( n, [topMap.get( 2 )])
+
+            List<Map<String, L>> topArticlesMaps = (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet())
+
+            Map<String, Long>          topClientsToArticles   = StatUtils.sumAndTop2( n, [topArticlesMaps.get( 0 )])
+            Map<String, Long>          topReferrersToArticles = StatUtils.sumAndTop2( n, [topArticlesMaps.get( 1 )])
+
+            report( "Top $n articles (by hits)",          topArticlesToHits      );
+            report( "Top $n URIs (by bytes count)",       topUrisToBytes         );
+            report( "Top $n URIs (by 404 responses)",     topUrisTo404           );
+            report( "Top $n clients (by top articles)",   topClientsToArticles   );
+            report( "Top $n referrers (by top articles)", topReferrersToArticles );
         }
+
+        for(i in 0..<2)
+            freeBuffers << ByteBuffer.allocate( 1024*1024 );
+
+        def size = channel.size()
+        while (channel.position() < size)
+        {
+            final ByteBuffer buffer = freeBuffers.take ()
+
+            buffer.rewind ()
+            channel.read( buffer );
+
+            int endIndex = findLastEol(buffer)
+
+            if (++endIndex == 0)
+                endIndex = buffer.position();
+            channel.position(channel.position()-(buffer.position()-endIndex));
+            buffer.position (endIndex)
+
+            queue << buffer
+        }
+
+        queue << stop
+
+        channel.close();
+        fis.close();
     }
 
+    private static int findLastEol(ByteBuffer buffer) {
+        int endIndex = buffer.position() - 1
+        byte [] array = buffer.array()
+        for (; endIndex >= 0; endIndex--) {
+            if (array[endIndex] == LF || array[endIndex] == CR) {
+                break;
+            }
+        }
+        return endIndex
+    }
 
-
-   /**
+    /**
     * This is where each thread gets it's own byte[] chunk to analyze:
     * - it starts at index "startIndex"
     * - it ends   at index "endIndex" - 1

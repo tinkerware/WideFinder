@@ -23,8 +23,8 @@ class Stat extends Thread
     */
     private static L get( Map<String, L> map, String key )
     {
-        if ( ! map[ key ] ) { map[ key ] = new L() }
         L      counter = map[ key ];
+        if ( counter == null) { map[ key ] = (counter = new L()) }
         return counter;
     }
 
@@ -35,8 +35,8 @@ class Stat extends Thread
      */
     private static L get( Map<String, Map<String, L>> map, String key, String secondKey )
     {
-        if ( ! map[ key ] ) { map[ key ] = new HashMap<String, L>() }
         Map<String, L> secondMap = map[ key ];
+        if ( map[key] == null ) { map[ key ] = (secondMap = new HashMap<String, L>()) }
         return get( secondMap, secondKey );
     }
 
@@ -89,7 +89,7 @@ class Stat extends Thread
         }
 
         addUri( uri,
-                (( byteCount != '-' ) ? Integer.valueOf( byteCount ) : 0 ),
+                (( byteCount != '-' ) ? Integer.parseInt( byteCount, 10 ) : 0 ),
                 ( statusCode == '404' ));
     }
 
