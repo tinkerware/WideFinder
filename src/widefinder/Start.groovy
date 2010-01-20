@@ -164,10 +164,10 @@ class Start
                  * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
                  * Creating final copies: in dynamic Groovy without finals - variables were bounded differently
                  */
-                // TODO - http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
-                final int threadStartIndex = startIndex;
-                final int threadEndIndex   = endIndex;
-                futures << pool.submit({ processLines( array, threadStartIndex, threadEndIndex, (( Stat ) Thread.currentThread())) })
+                // http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
+                // final int threadStartIndex = startIndex;
+                // final int threadEndIndex   = endIndex;
+                futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
 
                 startIndex = endIndex;
             }
@@ -271,7 +271,9 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        new String( array, 0, start, ( end - start ) );
+        int length = ( end - start )
+        assert ( length < 1024 )
+        new String( array, 0, start, length );
     }
 
 

@@ -23,8 +23,8 @@ class Stat extends Thread
     */
     private static L get( Map<String, L> map, String key )
     {
-        L      counter = map[ key ];
-        if ( counter == null) { map[ key ] = (counter = new L()) }
+        L    counter = map[ key ];
+        if ( counter == null ) { map[ key ] = ( counter = new L()) }
         return counter;
     }
 
@@ -36,7 +36,7 @@ class Stat extends Thread
     private static L get( Map<String, Map<String, L>> map, String key, String secondKey )
     {
         Map<String, L> secondMap = map[ key ];
-        if ( map[key] == null ) { map[ key ] = (secondMap = new HashMap<String, L>()) }
+        if ( map[ key ] == null ) { map[ key ] = ( secondMap = new HashMap<String, L>()) }
         return get( secondMap, secondKey );
     }
 
