@@ -2,8 +2,11 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.concurrent.*
-
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 @Typed
 class Start
@@ -167,6 +170,7 @@ class Start
                 // http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
                 // final int threadStartIndex = startIndex;
                 // final int threadEndIndex   = endIndex;
+
                 futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
 
                 startIndex = endIndex;
@@ -197,6 +201,8 @@ class Start
     */
     static void processLines( byte[] array, int startIndex, int endIndex, Stat stat )
     {
+        boolean isArticle     = false;
+        boolean found         = false;
         String  clientAddress = null;
         String  httpMethod    = null;
         String  uri           = null;
@@ -218,16 +224,20 @@ class Start
                     case 5  : httpMethod    = string( array, tokenStart + 1, index ); // Getting rid of starting '"'
                               break;
                     case 6  : uri           = string( array, tokenStart, index );
+                              isArticle     = stat.isArticle( uri, httpMethod )
                               break;
                     case 8  : statusCode    = string( array, tokenStart, index );
                               break;
                     case 9  : byteCount     = string( array, tokenStart, index );
+                              found         = ( ! isArticle ) // If not article - we've found everything we need
+                                                              // If article     - we need to find referrer (next token)
                               break;
                     case 10 : referrer      = string( array, tokenStart + 1, index - 1 ); // Getting rid of wrapping '"'
+                              found         = true
                               break;
                 }
 
-                if ( referrer == null )
+                if ( ! found )
                 {
                     /**
                      * Not all tokens are found yet - keep looking for the next one
@@ -242,7 +252,7 @@ class Start
                      * We've found all tokens ("referrer" was the last one) - updating statistics,
                      * adding the data read from the current line
                      */
-                    stat.update( clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
+                    stat.update( isArticle, clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
 
                     /**
                      * Finding and skipping "end of line" sequence
@@ -253,6 +263,8 @@ class Start
                      tokenStart    = index;
                      tokenCounter  = 0;
 
+                     isArticle     = false;
+                     found         = false;
                      clientAddress = null;
                      httpMethod    = null;
                      uri           = null;
@@ -271,9 +283,15 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        int length = ( end - start )
-        assert ( length < 1024 )
-        new String( array, 0, start, length );
+        int    length = ( end - start )
+        String s      = new String( array, 0, start, length );
+
+        if ( length >= 1024 )
+        {
+            println "[$s][$length]";
+        }
+
+        s
     }
 
 

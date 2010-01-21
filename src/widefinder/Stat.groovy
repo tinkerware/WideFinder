@@ -16,6 +16,14 @@ class Stat extends Thread
     }
 
 
+    /**
+     * Article URI prefix and matcher (one per thread instance):
+     * "/ongoing/When/200x/2007/06/17/Web3S"
+     */
+    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
+    private        final Matcher ARTICLE_MATCHER = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" ).
+                                                   matcher( "" );
+
 
    /**
     * Gets a counter bound to the key specified in the map passed
@@ -41,13 +49,6 @@ class Stat extends Thread
     }
 
 
-    /**
-     * Article URI pattern: "/ongoing/When/200x/2007/06/17/Web3S"
-     */
-    private static final String  ARTICLE_PREFIX  = '/ongoing/When/';
-    private        final Matcher ARTICLE_MATCHER = Pattern.compile( "^$ARTICLE_PREFIX\\d{3}x/\\d{4}/\\d{2}/\\d{2}/[^ .]+\$" ).
-                                                   matcher( "" );
-
    /**
     * Maps holding all statistical data
     */
@@ -68,19 +69,31 @@ class Stat extends Thread
     private L referrersToArticlesCounter ( String articleUri, String referrer      ) { get( this.@articlesToReferrers, articleUri, referrer      ) }
 
 
+   /**
+    * Determines if URI specified is that of an article
+    */
+    boolean isArticle ( String uri, String httpMethod )
+    {
+         (( httpMethod == 'GET' )             &&
+          ( uri.startsWith( ARTICLE_PREFIX )) &&
+          ( ! uri.endsWith( '.png' ))         &&
+          ( ARTICLE_MATCHER.reset( uri ).lookingAt()))
+    }
+
 
    /**
     * Updates statistics according to benchmark needs:
     * - http://wikis.sun.com/display/WideFinder/The+Benchmark
     * - http://groovy.codehaus.org/Regular+Expressions
     */
-    void update( String clientAddress, String httpMethod, String uri, String statusCode, String byteCount, String referrer )
+    void update( boolean isArticle,
+                 String  clientAddress,
+                 String  httpMethod,
+                 String  uri,
+                 String  statusCode,
+                 String  byteCount,
+                 String  referrer )
     {
-        boolean isArticle = (( httpMethod == 'GET' )             &&
-                             ( uri.startsWith( ARTICLE_PREFIX )) &&
-                             ( ! uri.endsWith( '.png' ))         &&
-                             ( ARTICLE_MATCHER.reset( uri ).lookingAt()));
-
         if ( isArticle )
         {
             addArticle( uri,
