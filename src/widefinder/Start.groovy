@@ -283,15 +283,10 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        int    length = ( end - start )
-        String s      = new String( array, 0, start, length );
-
-        if ( length >= 1024 )
-        {
-            println "[$s][$length]";
-        }
-
-        s
+        int     length  = ( end - start );
+        boolean tooLong = ( length > 300 );
+        if    ( tooLong ) { length = 300 }
+        new String( array, 0, start, length ) + ( tooLong ? "...(truncated)" : "" )
     }
 
 
