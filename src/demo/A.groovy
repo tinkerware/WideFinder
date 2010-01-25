@@ -1,23 +1,32 @@
 package demo
 
+import groovy.io.FileType
 
 @Typed
 class A
 {
 
-   /**
-    * Retrieves values corresponding to the "top N" counters in the Map specified.
-    */
-    static Map<String, Long> top ( int n, Map<String, Long> map )
-    {
-        println "Here: [$map]";
-        return null;
-    }
-
-
     public static void main( String ... args )
     {
-//        top( 10, new B().getSomeMap());
-    }
+        new File( "k:/groovy-booster/data" ).withWriter
+        {
+            writer ->
 
+            new File( "k:/groovy-booster/logs" ).eachFileRecurse( FileType.FILES )
+            {
+                File file ->
+
+                println "[$file] - start"
+                long t   = System.currentTimeMillis();
+
+                file.eachLine{ writer.println( it ) }
+
+                long  ms  = System.currentTimeMillis() - t;
+                float mb  = ( file.length() / ( 2 ** 20 ));
+                int   mbs = (( 1000 * mb ) / ms );
+
+                println "[$file] - end ([$ms] ms, [$mb] Mb, [$mbs] Mb/sec)"
+            }
+        }
+    }
 }
