@@ -65,7 +65,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
 
     /**
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     * Now comes teh tricky part ...
+     * Now comes the tricky part ...
      * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
      */
 
