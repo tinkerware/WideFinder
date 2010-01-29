@@ -13,6 +13,7 @@ class Stat extends Thread
     Stat ( Runnable r )
     {
         super( r )
+        println "Thread [${ getName()}] created"
     }
 
 
@@ -94,6 +95,7 @@ class Stat extends Thread
                  String  byteCount,
                  String  referrer )
     {
+/*
         if ( isArticle )
         {
             addArticle( uri,
@@ -104,6 +106,7 @@ class Stat extends Thread
         addUri( uri,
                 ( byteCount.contains( '-' ) ? 0 : Integer.parseInt( byteCount, 10 )),
                 ( statusCode == '404' ));
+*/
     }
 
 

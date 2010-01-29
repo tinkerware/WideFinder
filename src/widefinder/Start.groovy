@@ -5,8 +5,6 @@ import java.nio.channels.FileChannel
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 
 @Typed
 class Start
@@ -21,6 +19,20 @@ class Start
     * Buffer size (in megabytes) for reading the file
     */
     private static final int BUFFER_SIZE = ( 10 * 1024 * 1024 );
+
+
+   /**
+    * 1MB = 1024 * 1024 (2^20)
+    * 1GB = 1024 * 1024 * 1024 (2^30)
+    */
+    private static final long MB = ( 2 ** 20 );
+    private static final long GB = ( 2 ** 30 );
+
+
+   /**
+    * Number of available processors
+    */
+    private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors();
 
 
     /**
@@ -38,11 +50,13 @@ class Start
 
         final long               t           = System.currentTimeMillis();
         final ThreadPoolExecutor pool        =
-            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors(), { Runnable r -> new Stat( r ) });
+            ( ThreadPoolExecutor ) Executors.newFixedThreadPool( AVAILABLE_PROCESSORS, { Runnable r -> new Stat( r ) });
         final int                bufferSize  = Math.min( file.size(), BUFFER_SIZE );
         final ByteBuffer         buffer      = ByteBuffer.allocate( bufferSize );
         final FileInputStream    fis         = new FileInputStream( file );
         final FileChannel        channel     = fis.getChannel();
+
+        println "File size [${ ( int )( channel.size() / GB ) }] Gb, [$AVAILABLE_PROCESSORS] processors";
 
         processChannel( channel, buffer, pool );
 
@@ -111,14 +125,30 @@ class Start
     {
         buffer.rewind();
 
+        long prevPosition = 0;
+        long prevTime     = System.currentTimeMillis();
+
         /**
          * Reading from file channel into buffer (until it ends)
          */
         while ( channel.position() < channel.size())
         {
+            final long currentPosition = channel.position()
+
+            println ">>> [${ ( currentPosition / MB )}] Mb"
+
+            if (( currentPosition - prevPosition ) > GB )
+            {
+                final long currentTime = System.currentTimeMillis();
+                println "[${ ( int )( currentPosition / GB ) }] Gb - [${ ( currentTime - prevTime ) / 1000 }] sec";
+
+                prevPosition = currentPosition;
+                prevTime     = currentTime;
+            }
+
             int     bytesRead = channel.read( buffer );
             byte[]  array     = buffer.array();
-            boolean isEof     = ( channel.position() == channel.size());
+            boolean isEof     = ( currentPosition == channel.size());
 
             /**
              * Iterating through buffer, giving each thread it's own byte[] chunk to analyze:
@@ -171,7 +201,14 @@ class Start
                 // final int threadStartIndex = startIndex;
                 // final int threadEndIndex   = endIndex;
 
-                futures << pool.submit({ processLines( array, startIndex, endIndex, (( Stat ) Thread.currentThread())) })
+                futures << pool.submit(
+                {
+                    final long  t    = System.currentTimeMillis()
+                    final Stat  stat = ( Stat ) Thread.currentThread()
+                    final float mb   = (( endIndex - startIndex ) / MB )
+                    processLines( array, startIndex, endIndex, stat )
+                    println "Thread [${ stat.getName()}] - [${ System.currentTimeMillis() - t }] ms ([$mb] Mb)"
+                })
 
                 startIndex = endIndex;
             }
