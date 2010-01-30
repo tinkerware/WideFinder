@@ -87,6 +87,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
     public void clear ()
     {
         getMaps().clear()
+        getMaps() << newMap()
     }
 
 
