@@ -1,6 +1,7 @@
 @Typed
 package widefinder
 
+
 /**
  * {@link Map} implementation avoiding any rehashes
  *
@@ -15,7 +16,16 @@ public class NoRehashMap<K, V> implements Map<K, V>
 
 
    /**
+    * Creates a new Map instance.
     *
+    * @param capacity   initial capacity for each internal Map, same as in {@link HashMap} constructor
+    * @param loadFactor internal Map load factor, same as in {@link HashMap} constructor
+    *
+    * Actual size of each internal Map (there will be N of them - depending on their capacities and total number
+    * of elements added to <code>NoRehashMap</code>) will be no more than {@code threshold  = (( capacity * loadFactor ) - 1 ) }
+    * to prevent them from rehashing.
+    *
+    * As <code>HashMap</code> documentation says:
     * <a href="http://java.sun.com/javase/6/docs/api/java/util/HashMap.html">
     *   If the initial capacity is greater than the maximum number of entries divided by the load factor, no rehash operations will ever occur
     * </a>
@@ -53,23 +63,16 @@ public class NoRehashMap<K, V> implements Map<K, V>
 
 
     @Override
-    public int size ()
-    {
-        ( int ) getMaps()*.size().inject( 0 ){ int prev, int current -> ( prev + current ) }
-    }
-
-
-    @Override
     public boolean isEmpty ()
     {
-        (( getMaps().isEmpty()) || ( ! getMaps().any()))
+        ( ! getMaps().any())
     }
 
 
     @Override
     public boolean containsKey ( Object key )
     {
-        getMaps().any { Map m -> m.containsKey( key ) }
+        ( findMap( key ) != null )
     }
 
 
@@ -109,6 +112,9 @@ public class NoRehashMap<K, V> implements Map<K, V>
 
         if ( map.size() == getThreshold())
         {
+            /**
+             * Last map is full - creating a new one
+             */
             getMaps() << newMap()
         }
 
@@ -131,22 +137,64 @@ public class NoRehashMap<K, V> implements Map<K, V>
 
 
     @Override
+    public int size ()
+    {
+        reduce({ Map m -> m.size() },
+               0,
+               { int result, int size -> ( result + size ) })
+    }
+
+
+    @Override
     public Set<K> keySet ()
     {
-        getMaps()*.keySet().inject( new HashSet<K>()){ Set result, Set keySet -> result << keySet }
+        reduce({ Map m -> m.keySet() },
+               new HashSet<K>(),
+               { Set result, Set keySet -> result.addAll( keySet ); result })
     }
 
 
     @Override
     public Collection<V> values ()
     {
-        getMaps()*.values().inject( new ArrayList<V>()){ Collection result, Collection values -> result << values }
+        reduce({ Map m -> m.values() },
+               new ArrayList<V>(),
+               { Collection result, Collection values -> result.addAll( values ); result })
     }
 
 
     @Override
     public Set<Map.Entry<K, V>> entrySet ()
     {
-        getMaps()*.entrySet().inject( new HashSet()){ Set result, Set entrySet -> result << entrySet }
+        reduce({ Map m -> m.entrySet() },
+               new HashSet(),
+               { Set result, Set entrySet -> result.addAll( entrySet ); result })
+    }
+
+
+   /**
+    * "Reduces" an operation invoked on all internal Maps to a single result
+    *
+    * @param methodClosure    method to invoke on all internal maps,
+    *                         passed a single Map as a parameter
+    * @param initialValue     initial value to pass to {@code inject()}
+    * @param operationClosure second parameter to pass to {@code inject()},
+    *                         passed two arguments: - aggregated results (started from <code>initialValue</code>)
+    *                                               - current iteration value (as returned by <code>methodClosure</code>)
+    *
+    * See <a href="http://groovy.codehaus.org/groovy-jdk/java/lang/Object.html#inject(java.lang.Object value, groovy.lang.Closure closure)">
+    *       inject()
+    *     </a>
+    */
+    private <T> T reduce( Closure methodClosure, T initialValue, Closure operationClosure )
+    {
+        ( T ) getMaps().collect
+                        {
+                            Map m -> methodClosure( m )
+                        }.
+                        inject( initialValue )
+                        {
+                            def prevResult, def currentValue -> operationClosure( prevResult, currentValue )
+                        }
     }
 }
