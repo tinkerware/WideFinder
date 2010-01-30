@@ -1,10 +1,10 @@
+@Typed
 package widefinder
 
 
 /**
  * Statistics aggregator utils
  */
-@Typed
 final class StatUtils
 {
 

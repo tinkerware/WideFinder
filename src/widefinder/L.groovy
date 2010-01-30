@@ -1,10 +1,10 @@
+@Typed
 package widefinder
 
 
 /**
  * Mutable "long" wrapper
  */
-@Typed
 class L
 {
     private long counter = 0;

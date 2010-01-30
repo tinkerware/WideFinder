@@ -1,3 +1,4 @@
+@Typed
 package widefinder
 
 import java.util.regex.Pattern
@@ -6,7 +7,6 @@ import java.util.regex.Matcher
 /**
  * Statistics class
  */
-@Typed
 class Stat extends Thread
 {
 
