@@ -15,7 +15,7 @@ class NoRehashMapTest extends GroovyTestCase
     {
         NoRehashMap m = new NoRehashMap<Integer, Integer>( 1000, 0.95f )
         1.upto( 100000 ){ j -> m.put( j, j ) }
-        assertEquals( 106, m.mapsNumber()) // ( 100000 / 949 ) + 1
+        assertEquals( 106, m.mapsNumber()) // ( 100000 / 948 ) + 1
 
 
         m = new NoRehashMap<Integer, Integer>( 10000, 0.65f )
