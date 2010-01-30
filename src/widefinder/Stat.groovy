@@ -29,8 +29,7 @@ class Stat extends Thread
    /**
     * Data Map
     */
-    private final Map<String, UriData> data = new NoRehashMap<String, UriData>( 1024 * 1024 )
-    private       Map<String, UriData> data(){ this.@data }
+    final Map<String, UriData> data = new NoRehashMap<String, UriData>( 100 * 1024 )
 
 
    /**
@@ -59,8 +58,8 @@ class Stat extends Thread
                  String  referrer )
     {
 
-        UriData uriData = data()[ uri ]
-        if ( uriData == null ) { uriData = ( data()[ uri ] = new UriData()) }
+        UriData uriData = getData()[ uri ]
+        if ( uriData == null ) { uriData = ( getData()[ uri ] = new UriData()) }
 
         uriData.update( isArticle,
                         ( byteCount.contains( '-' ) ? 0 : Integer.parseInt( byteCount, 10 )),

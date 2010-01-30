@@ -77,8 +77,21 @@ class Start
     */
     private static void reportTopResults ( int n, ThreadPoolExecutor pool )
     {
-/*
         List<Future> futures = [];
+
+        pool.getCorePoolSize().times
+        {
+            futures << pool.submit(
+            {
+               final Stat        stat = ( Stat ) Thread.currentThread()
+               final NoRehashMap data = stat.getData()
+
+               println "Thread [$stat], data: size - [${ data.size() }], maps - [${ data.mapsNumber() }]"
+            })
+        }
+
+
+/*
         pool.getCorePoolSize().times
         {
             */
@@ -142,7 +155,7 @@ class Start
         {
             final long currentPosition = channel.position()
 
-            println ">>> [${ ( currentPosition / MB )}] Mb"
+//            println ">>> [${ ( currentPosition / MB )}] Mb"
 
             if (( currentPosition - prevPosition ) > GB )
             {
@@ -214,7 +227,7 @@ class Start
                     final Stat  stat = ( Stat ) Thread.currentThread()
                     final float mb   = (( endIndex - startIndex ) / MB )
                     processLines( array, startIndex, endIndex, stat )
-                    println "Thread [${ stat.getName()}] - [${ System.currentTimeMillis() - t }] ms ([$mb] Mb)"
+//                    println "Thread [${ stat.getName()}] - [${ System.currentTimeMillis() - t }] ms ([$mb] Mb)"
                 })
 
                 startIndex = endIndex;
