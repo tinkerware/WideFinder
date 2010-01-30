@@ -94,7 +94,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
     @Override
     public V get ( Object key )
     {
-        findMap( key ).get( key )
+        findMap( key )?.get( key )
     }
 
 

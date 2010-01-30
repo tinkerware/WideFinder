@@ -77,12 +77,15 @@ class Start
     */
     private static void reportTopResults ( int n, ThreadPoolExecutor pool )
     {
+/*
         List<Future> futures = [];
         pool.getCorePoolSize().times
         {
-            /**
+            */
+/**
              * Each thread calculates it's own "top n" maps
-             */
+             *//*
+
             futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) })
         }
 
@@ -94,10 +97,12 @@ class Start
         futures = [];
         pool.getCorePoolSize().times
         {
-            /**
+            */
+/**
              * Each thread calculates it's own "top n clients/referrers" maps
              * (according to "top articles" calculated previously)
-             */
+             *//*
+
             futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
         }
 
@@ -110,6 +115,7 @@ class Start
         report( "Top $n URIs (by 404 responses)",     topUrisTo404           );
         report( "Top $n clients (by top articles)",   topClientsToArticles   );
         report( "Top $n referrers (by top articles)", topReferrersToArticles );
+*/
     }
 
 
@@ -287,7 +293,7 @@ class Start
                 else
                 {
                     /**
-                     * We've found all tokens ("referrer" was the last one) - updating statistics,
+                     * We've found all tokens - updating statistics:
                      * adding the data read from the current line
                      */
                     stat.update( isArticle, clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
