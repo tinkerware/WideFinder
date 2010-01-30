@@ -155,8 +155,6 @@ class Start
         {
             final long currentPosition = channel.position()
 
-//            println ">>> [${ ( currentPosition / MB )}] Mb"
-
             if (( currentPosition - prevPosition ) > GB )
             {
                 final long currentTime = System.currentTimeMillis();
@@ -215,21 +213,8 @@ class Start
 
                 /**
                  * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
-                 * Creating final copies: in dynamic Groovy without finals - variables were bounded differently
                  */
-                // http://groups.google.com/group/groovyplusplus/browse_thread/thread/61ed96c6e40b7c4a
-                // final int threadStartIndex = startIndex;
-                // final int threadEndIndex   = endIndex;
-
-                futures << pool.submit(
-                {
-                    final long  t    = System.currentTimeMillis()
-                    final Stat  stat = ( Stat ) Thread.currentThread()
-                    final float mb   = (( endIndex - startIndex ) / MB )
-                    processLines( array, startIndex, endIndex, stat )
-//                    println "Thread [${ stat.getName()}] - [${ System.currentTimeMillis() - t }] ms ([$mb] Mb)"
-                })
-
+                futures << pool.submit({ processLines( array, startIndex, endIndex, ( Stat ) Thread.currentThread()) })
                 startIndex = endIndex;
             }
 
@@ -340,10 +325,7 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        int     length  = ( end - start );
-        boolean tooLong = ( length > 300 );
-        if    ( tooLong ) { length = 300 }
-        new String( array, 0, start, length ) + ( tooLong ? "...(truncated)" : "" )
+        new String( array, 0, start, Math.min(( end - start ), 256 )).intern()
     }
 
 
