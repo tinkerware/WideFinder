@@ -8,7 +8,6 @@ package widefinder
  */
 public class NoRehashMap<K, V> implements Map<K, V>
 {
-
     final int             capacity
     final int             threshold
     final float           loadFactor
@@ -25,10 +24,10 @@ public class NoRehashMap<K, V> implements Map<K, V>
     {
         assert ( loadFactor > 0.0f ) && ( loadFactor < 1.0f )
 
-        this.capacity   = capacity                         // Initial Map capacity
-        this.threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
-        this.loadFactor = loadFactor                       // Load factor
-        this.maps       = new ArrayList<Map<K, V>>([ newMap() ]);
+        this.@capacity   = capacity                         // Initial Map capacity
+        this.@threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
+        this.@loadFactor = loadFactor                       // Load factor
+        this.@maps       = new ArrayList<Map<K, V>>([ newMap() ]);
     }
 
 
