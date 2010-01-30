@@ -1,6 +1,7 @@
 @Typed
 package widefinder
 
+
 /**
  * Container to hold all URI-related data needed by statistics gathering
  */
