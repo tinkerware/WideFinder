@@ -23,6 +23,8 @@ public class NoRehashMap<K, V> implements Map<K, V>
     */
     public NoRehashMap ( int capacity, float loadFactor = 0.85f )
     {
+        assert ( loadFactor > 0.0f ) && ( loadFactor < 1.0f )
+
         this.capacity   = capacity                         // Initial Map capacity
         this.threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
         this.loadFactor = loadFactor                       // Load factor
