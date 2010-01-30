@@ -189,11 +189,11 @@ class NoRehashMapTest extends GroovyTestCase
 
         m.put( "c", "d" )
         assertEquals( "d", m[ "c" ] )
-        assertEquals( "b", m.get( "c" ))
+        assertEquals( "d", m.get( "c" ))
 
         m.put( "e", "f" )
         assertEquals( "f", m[ "e" ] )
-        assertEquals( "b", m.get( "e" ))
+        assertEquals( "f", m.get( "e" ))
 
         m.clear()
         assertEquals( 0, m.size())
