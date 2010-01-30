@@ -7,7 +7,7 @@ package widefinder
  */
 class UriData
 {
-           boolean        isArticle   = false
+           boolean        article   = false
      final L              accessCount = new L()
      final L              byteCount   = new L()
      final L              is404Count  = new L()
@@ -15,36 +15,40 @@ class UriData
            Map<String, L> referrers   = null
 
 
-    void update( boolean isArticle,
+    void update( boolean article,
                  int     byteCount,
                  boolean is404,
                  String  clientAddress,
                  String  referrer )
     {
-        setIsArticle( isArticle )
-
-        getAccessCount().increment()
-
         getByteCount().add( byteCount )
-
         if ( is404 ) { getIs404Count().increment() }
 
-        if ( clientAddress )
+        if ( article )
         {
-            if ( ! getClients()) { setClients( new NoRehashMap<String, L>( 1024 )) }
+            setArticle( true )
+            getAccessCount().increment()
 
-            L counter = getClients().get( clientAddress );
+            /**
+             * Update clients Map
+             */
+
+            if ( ! getClients()) { setClients( new NoRehashMap<String, L>( 128 )) }
+            L counter = getClients()[ clientAddress ];
             if ( counter == null ) { counter = ( getClients()[ clientAddress ] = new L()) }
             counter.increment()
-        }
 
-        if ( referrer )
-        {
-            if ( ! getReferrers()) { setReferrers( new NoRehashMap<String, L>( 1024 )) }
+            /**
+             * Update referrers map (if "referrer" isn't null)
+             */
 
-            L counter = getReferrers().get( referrer );
-            if ( counter == null ) { counter = ( getReferrers()[ referrer ] = new L()) }
-            counter.increment()
+            if ( referrer )
+            {
+                if ( ! getReferrers()) { setReferrers( new NoRehashMap<String, L>( 128 )) }
+                counter = getReferrers()[ referrer ];
+                if ( counter == null ) { counter = ( getReferrers()[ referrer ] = new L()) }
+                counter.increment()
+            }
         }
     }
 }
