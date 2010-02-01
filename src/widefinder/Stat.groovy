@@ -61,10 +61,19 @@ class Stat extends Thread
         UriData uriData = getData()[ uri ]
         if ( uriData == null ) { uriData = ( getData()[ uri ] = new UriData()) }
 
-        uriData.update( isArticle,
-                        ( byteCount.contains( '-' ) ? 0 : Integer.parseInt( byteCount, 10 )),
-                        ( statusCode == '404' ),
-                        clientAddress,
-                        ((( referrer != null ) && ( ! referrer.isEmpty()) && ( referrer != '-' )) ? referrer : null ))
+        uriData.update( isArticle, getByteCount( byteCount ), ( statusCode == '404' ), clientAddress, getReferrer( referrer ))
+    }
+
+
+    private int getByteCount( String s )
+    {
+        try { ( s.contains( '-' ) ? 0 : Integer.parseInt( s, 10 )) }
+        catch ( NumberFormatException e ) { 0 } // Happened once on 35+ Gb - now, go find this line
+    }
+
+
+    private String getReferrer( String s )
+    {
+        (( s && ( s != '-' )) ? s : null )
     }
 }
