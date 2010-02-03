@@ -323,7 +323,7 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        new String( array, 0, start, Math.min(( end - start ), 256 )).intern()
+        new String( array, 0, start, Math.min(( end - start ), 256 ))
     }
 
 
