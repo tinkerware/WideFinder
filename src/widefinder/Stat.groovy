@@ -28,7 +28,7 @@ class Stat extends Thread
    /**
     * Data Map
     */
-    final Map<String, ? extends UriData> data = new NoRehashMap<String, ? extends UriData>( 100 * 1024 )
+    final Map<String, ? extends UriData> data = new NoRehashMap<String, ? extends UriData>( 10 * 1024 )
 
 
    /**
@@ -57,14 +57,23 @@ class Stat extends Thread
                  String  referrer )
     {
 
-        UriData uriData = getData()[ uri ]
+        UriData uriData    = getData()[ uri ]
+        boolean is404      = ( statusCode == '404' )
+        int     byteCountI = getByteCount( byteCount )
+
         if ( uriData == null ) { uriData = ( getData()[ uri ] = ( isArticle ? new ArticleUriData() : new UriData())) }
 
-        uriData.update( isArticle,
-                        getByteCount( byteCount ),
-                        ( statusCode == '404' ),
-                        clientAddress,
-                        (( referrer && ( referrer.length() > 1 )) ? referrer : null ))
+        if ( isArticle )
+        {
+            (( ArticleUriData ) uriData ).update( byteCountI,
+                                                  is404,
+                                                  clientAddress,
+                                                  (( referrer && ( referrer.length() > 1 )) ? referrer : null ))
+        }
+        else
+        {
+            uriData.update( byteCountI, is404 )
+        }
     }
 
 

@@ -11,11 +11,8 @@ class UriData
     protected final L is404Count = new L()
 
 
-    void update( boolean article,
-                 int     byteCount,
-                 boolean is404,
-                 String  clientAddress,
-                 String  referrer )
+    void update( int     byteCount,
+                 boolean is404 )
     {
         this.@byteCount.add( byteCount )
         if ( is404 ) { this.@is404Count.increment() }

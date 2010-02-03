@@ -12,9 +12,7 @@ class ArticleUriData extends UriData
     private final Map<String, L> referrers   = new HashMap<String,L>()
 
 
-    @Override
-    void update( boolean article,
-                 int     byteCount,
+    void update( int     byteCount,
                  boolean is404,
                  String  clientAddress,
                  String  referrer )
