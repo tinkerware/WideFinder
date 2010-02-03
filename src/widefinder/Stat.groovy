@@ -29,7 +29,7 @@ class Stat extends Thread
    /**
     * Data Map
     */
-    final Map<String, UriData> data = new NoRehashMap<String, UriData>( 100 * 1024 )
+    final Map<String, ? extends UriData> data = new NoRehashMap<String, ? extends UriData>( 100 * 1024 )
 
 
    /**
@@ -59,9 +59,13 @@ class Stat extends Thread
     {
 
         UriData uriData = getData()[ uri ]
-        if ( uriData == null ) { uriData = ( getData()[ uri ] = new UriData()) }
+        if ( uriData == null ) { uriData = ( getData()[ uri ] = ( isArticle ? new ArticleUriData() : new UriData())) }
 
-        uriData.update( isArticle, getByteCount( byteCount ), ( statusCode == '404' ), clientAddress, getReferrer( referrer ))
+        uriData.update( isArticle,
+                        getByteCount( byteCount ),
+                        ( statusCode == '404' ),
+                        clientAddress,
+                        (( referrer && ( referrer.length() > 1 )) ? referrer : null ))
     }
 
 
@@ -69,11 +73,5 @@ class Stat extends Thread
     {
         try { ( s.contains( '-' ) ? 0 : Integer.parseInt( s, 10 )) }
         catch ( NumberFormatException e ) { 0 } // Happened once on 35+ Gb - now, go find this line
-    }
-
-
-    private String getReferrer( String s )
-    {
-        (( s && ( s != '-' )) ? s : null )
     }
 }
