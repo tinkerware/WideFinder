@@ -7,10 +7,10 @@ package widefinder
  */
 class UriData
 {
-    private final L byteCount  = new L()
-    private final L is404Count = new L()
+    protected final L byteCount  = new L()
+    protected final L is404Count = new L()
 
-    
+
     void update( boolean article,
                  int     byteCount,
                  boolean is404,

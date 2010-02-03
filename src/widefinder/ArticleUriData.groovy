@@ -19,8 +19,9 @@ class ArticleUriData extends UriData
                  String  clientAddress,
                  String  referrer )
     {
-        super( byteCount, is404 );
         this.@accessCount.increment()
+        this.@byteCount.add( byteCount )
+        if ( is404 ) { this.@is404Count.increment() }
 
         /**
          * Update clients Map
