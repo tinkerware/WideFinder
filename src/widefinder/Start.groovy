@@ -3,10 +3,10 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
+import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
-
 
 class Start
 {
@@ -77,20 +77,6 @@ class Start
     */
     private static void reportTopResults ( int n, ThreadPoolExecutor pool )
     {
-        List<Future> futures = [];
-
-        pool.getCorePoolSize().times
-        {
-            futures << pool.submit(
-            {
-               final Stat        stat = ( Stat ) Thread.currentThread()
-               final NoRehashMap data = stat.getData()
-
-               println "Thread [$stat], data: size - [${ data.size() }], maps - [${ data.mapsNumber() }]"
-            })
-        }
-
-
 /*
         pool.getCorePoolSize().times
         {
@@ -115,6 +101,7 @@ class Start
              * Each thread calculates it's own "top n clients/referrers" maps
              * (according to "top articles" calculated previously)
              *//*
+
 
             futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
         }
@@ -155,13 +142,24 @@ class Start
         {
             final long currentPosition = channel.position()
 
-            if (( currentPosition - prevPosition ) > GB )
+            if (( currentPosition - prevPosition ) > GB ) // Next GB processed
             {
                 final long currentTime = System.currentTimeMillis();
                 println "[${ ( int )( currentPosition / GB ) }] Gb - [${ ( currentTime - prevTime ) / 1000 }] sec";
 
                 prevPosition = currentPosition;
                 prevTime     = currentTime;
+
+                pool.getCorePoolSize().times
+                {
+                    pool.submit(
+                    {
+                       Stat        stat = ( Stat ) Thread.currentThread()
+                       NoRehashMap data = stat.getData()
+
+                       println "Thread [$stat], data: size - [${ data.size() }], maps - [${ data.mapsNumber() }]"
+                    } as Runnable )
+                }
             }
 
             int     bytesRead = channel.read( buffer );
@@ -214,7 +212,7 @@ class Start
                 /**
                  * Each thread analyzes it's own byte[] area and updates Stat instance (which is the thread itself)
                  */
-                futures << pool.submit({ processLines( array, startIndex, endIndex, ( Stat ) Thread.currentThread()) })
+                futures << pool.submit({ processLines( array, startIndex, endIndex, ( Stat ) Thread.currentThread()) } as Runnable )
                 startIndex = endIndex;
             }
 
