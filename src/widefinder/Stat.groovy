@@ -34,10 +34,9 @@ class Stat extends Thread
    /**
     * Determines if URI specified is that of an article
     */
-    boolean isArticle ( String uri, String httpMethod )
+    boolean isArticle ( String uri )
     {
-         (( httpMethod == 'GET' )             &&
-          ( uri.startsWith( ARTICLE_PREFIX )) &&
+         (( uri.startsWith( ARTICLE_PREFIX )) &&
           ( ! uri.endsWith( '.png' ))         &&
           ( ARTICLE_MATCHER.reset( uri ).lookingAt()))
     }
@@ -50,7 +49,6 @@ class Stat extends Thread
     */
     void update( boolean isArticle,
                  String  clientAddress,
-                 String  httpMethod,
                  String  uri,
                  String  statusCode,
                  String  byteCount,

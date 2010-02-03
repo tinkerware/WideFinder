@@ -244,7 +244,6 @@ class Start
         boolean isArticle     = false;
         boolean found         = false;
         String  clientAddress = null;
-        String  httpMethod    = null;
         String  uri           = null;
         String  statusCode    = null;
         String  byteCount     = null;
@@ -261,10 +260,8 @@ class Start
                 {
                     case 0  : clientAddress = string( array, tokenStart, index );
                               break;
-                    case 5  : httpMethod    = string( array, tokenStart + 1, index ); // Getting rid of starting '"'
-                              break;
                     case 6  : uri           = string( array, tokenStart, index );
-                              isArticle     = stat.isArticle( uri, httpMethod )
+                              isArticle     = stat.isArticle( uri )
                               break;
                     case 8  : statusCode    = string( array, tokenStart, index );
                               break;
@@ -292,7 +289,7 @@ class Start
                      * We've found all tokens - updating statistics:
                      * adding the data read from the current line
                      */
-                    stat.update( isArticle, clientAddress, httpMethod, uri, statusCode, byteCount, referrer );
+                    stat.update( isArticle, clientAddress, uri, statusCode, byteCount, referrer );
 
                     /**
                      * Finding and skipping "end of line" sequence
@@ -306,7 +303,6 @@ class Start
                      isArticle     = false;
                      found         = false;
                      clientAddress = null;
-                     httpMethod    = null;
                      uri           = null;
                      statusCode    = null;
                      byteCount     = null;
