@@ -355,15 +355,18 @@ class Start
     {
         end              = Math.min( end, start + 256 )
         Integer hashcode = hashcode( array, start, end )
-        String  s        = STRINGS.get( hashcode )
+        String  s1       = STRINGS.get( hashcode )
+        String  s2       = new String( array, 0, start, ( end - start ))
 
-        if ( s ) { return s }
+        if ( s1 )
+        {
+            assert ( s1 == s2 )
+            return s1
+        }
 
-        s = new String( array, 0, start, ( end - start ));
+        STRINGS.put( hashcode, s2 )
 
-        STRINGS.put( hashcode, s )
-
-        return s
+        return s2
     }
 
 
