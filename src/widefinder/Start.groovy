@@ -30,6 +30,12 @@ class Start
     private static final long GB = ( 2 ** 30 );
 
 
+    /**
+     * Pre-calculated powers of 10: 1, 10, 100, 1000 ...
+     */
+    private static final int[] TEN_POWERS = ( 0 .. 9 ).collect { int j -> ( 10 ** j ) }
+
+
    /**
     * Number of available processors
     */
@@ -246,7 +252,7 @@ class Start
         String  clientAddress = null;
         String  uri           = null;
         String  statusCode    = null;
-        String  byteCount     = null;
+        int     byteCount     = 0;
         String  referrer      = null;
 
         int     tokenStart    = startIndex;
@@ -265,9 +271,9 @@ class Start
                               break;
                     case 8  : statusCode    = string( array, tokenStart, index );
                               break;
-                    case 9  : byteCount     = string( array, tokenStart, index );
+                    case 9  : byteCount     = integer( array, tokenStart, index );
                               found         = ( ! isArticle ) // If not article - we've found everything we need
-                                                              // If article     - we need to find referrer (next token)
+                                                              // If article     - we need to find referrer (last token)
                               break;
                     case 10 : referrer      = string( array, tokenStart + 1, index - 1 ); // Getting rid of wrapping '"'
                               found         = true
@@ -305,11 +311,37 @@ class Start
                      clientAddress = null;
                      uri           = null;
                      statusCode    = null;
-                     byteCount     = null;
+                     byteCount     = 0;
                      referrer      = null;
                 }
             }
         }
+    }
+
+
+   /**
+    * Parses byte[] area specified as positive int number
+    * @return integer parsed or zero if area specified contains non-digits
+    */
+    private static int integer( byte[] array, int start, int end )
+    {
+        if ( array[ start ..< end ].any{ ( it < 48 ) || ( it > 57 ) } )
+        {   /**
+             * ASCII codes for 0-9 digits
+             * If not a digit - result is zero
+             */
+            return 0
+        }
+
+        int[] result = [ 0 ];
+        int   diff   = ( end - start - 1 )
+
+        array[ start ..< end ].eachWithIndex
+        {
+            byte b, int index -> result[ 0 ] += (( b - 48 ) * TEN_POWERS[ diff - index ] )
+        }
+
+        return result[ 0 ];
     }
 
 

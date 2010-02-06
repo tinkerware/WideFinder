@@ -51,33 +51,25 @@ class Stat extends Thread
                  String  clientAddress,
                  String  uri,
                  String  statusCode,
-                 String  byteCount,
+                 int     byteCount,
                  String  referrer )
     {
 
-        UriData uriData    = getData()[ uri ]
-        boolean is404      = ( statusCode == '404' )
-        int     byteCountI = getByteCount( byteCount )
+        UriData uriData = getData()[ uri ]
+        boolean is404   = ( statusCode == '404' )
 
         if ( uriData == null ) { uriData = ( getData()[ uri ] = ( isArticle ? new ArticleUriData() : new UriData())) }
 
         if ( isArticle )
         {
-            (( ArticleUriData ) uriData ).update( byteCountI,
+            (( ArticleUriData ) uriData ).update( byteCount,
                                                   is404,
                                                   clientAddress,
                                                   (( referrer && ( referrer.length() > 1 )) ? referrer : null ))
         }
         else
         {
-            uriData.update( byteCountI, is404 )
+            uriData.update( byteCount, is404 )
         }
-    }
-
-
-    private int getByteCount( String s )
-    {
-        try { ( s.contains( '-' ) ? 0 : Integer.parseInt( s, 10 )) }
-        catch ( NumberFormatException e ) { 0 } // Happened once on 35+ Gb - now, go find this line
     }
 }

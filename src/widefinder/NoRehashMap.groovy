@@ -9,6 +9,7 @@ package widefinder
  */
 public class NoRehashMap<K, V> implements Map<K, V>
 {
+    final boolean         threadSafe
     final int             capacity
     final int             threshold
     final float           loadFactor
@@ -20,6 +21,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
     *
     * @param capacity   initial capacity for each internal Map, same as in {@link HashMap} constructor
     * @param loadFactor internal Map load factor, same as in {@link HashMap} constructor
+    * @param threadSafe whether this instance should be thread-safe
     *
     * Actual size of each internal Map (there will be N of them - depending on their capacities and total number
     * of elements added to <code>NoRehashMap</code>) will be no more than {@code threshold  = (( capacity * loadFactor ) - 1 ) }
@@ -30,7 +32,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
     *   If the initial capacity is greater than the maximum number of entries divided by the load factor, no rehash operations will ever occur
     * </a>
     */
-    public NoRehashMap ( int capacity, float loadFactor = 0.85f )
+    public NoRehashMap ( int capacity, float loadFactor = 0.85f, boolean threadSafe = false )
     {
         assert ( loadFactor > 0.0f ) && ( loadFactor < 1.0f )
 
@@ -38,6 +40,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
         this.@threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
         this.@loadFactor = loadFactor                       // Load factor
         this.@maps       = new ArrayList<Map<K, V>>([ newMap() ]);
+        this.@threadSafe = threadSafe
     }
 
 
