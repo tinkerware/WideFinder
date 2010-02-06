@@ -3,7 +3,7 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.concurrent.Callable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
@@ -34,6 +34,13 @@ class Start
      * Pre-calculated powers of 10: 1, 10, 100, 1000 ...
      */
     private static final int[] TEN_POWERS = ( 0 .. 9 ).collect { int j -> ( 10 ** j ) }
+
+
+    /**
+     * Shared storage of all allocated Strings,
+     * keyed by their hashcode
+     */
+     private static final Map<Integer, String> STRINGS = new ConcurrentHashMap<Integer, String>();
 
 
    /**
@@ -325,23 +332,18 @@ class Start
     */
     private static int integer( byte[] array, int start, int end )
     {
-        if ( array[ start ..< end ].any{ ( it < 48 ) || ( it > 57 ) } )
-        {   /**
-             * ASCII codes for 0-9 digits
-             * If not a digit - result is zero
-             */
-            return 0
-        }
+        int result = 0
 
-        int[] result = [ 0 ];
-        int   diff   = ( end - start - 1 )
-
-        array[ start ..< end ].eachWithIndex
+        for ( int j = start; j < end; j++ )
         {
-            byte b, int index -> result[ 0 ] += (( b - 48 ) * TEN_POWERS[ diff - index ] )
+            byte b = array[ j ]
+
+            if (( b < 48 ) || ( b > 57 )) { return 0 }
+
+            result += (( b - 48 ) * TEN_POWERS[ end - j - 1 ] )
         }
 
-        return result[ 0 ];
+        return result;
     }
 
 
@@ -351,7 +353,26 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        new String( array, 0, start, Math.min(( end - start ), 256 ))
+        end              = Math.min( end, start + 256 )
+        Integer hashcode = hashcode( array, start, end )
+        String  s        = STRINGS.get( hashcode )
+
+        if ( s ) { return s }
+
+        s = new String( array, 0, start, ( end - start ));
+
+        STRINGS.put( hashcode, s )
+
+        return s
+    }
+
+
+    private static int hashcode( byte[] array, int start, int end )
+    {
+        int hashcode = 0
+        for ( int j = start; j < end; j++ ) { hashcode = (( 31 * hashcode ) + array[ j ] ) }
+
+        return hashcode
     }
 
 
