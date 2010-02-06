@@ -360,7 +360,10 @@ class Start
 
         if ( s1 )
         {
-            assert ( s1 == s2 )
+            if ( ! ( s1 == s2 ))
+            {
+                throw new RuntimeException( "[$s1](${ s1.hashCode()}) != [$s2](${ s2.hashCode()}) ($hashcode)" );
+            }
             return s1
         }
 
