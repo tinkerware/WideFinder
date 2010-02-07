@@ -8,6 +8,9 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
 
+import java.util.zip.Checksum
+import java.util.zip.CRC32
+
 class Start
 {
    /**
@@ -38,9 +41,9 @@ class Start
 
     /**
      * Shared storage of all allocated Strings,
-     * keyed by their hashcode
+     * keyed by their checksum
      */
-     private static final Map<Integer, String> STRINGS = new ConcurrentHashMap<Integer, String>();
+     private static final Map<Long, String> STRINGS = new ConcurrentHashMap<Long, String>();
 
 
    /**
@@ -353,32 +356,36 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        end              = Math.min( end, start + 256 )
-        Integer hashcode = hashcode( array, start, end )
-        String  s1       = STRINGS.get( hashcode )
-        String  s2       = new String( array, 0, start, ( end - start ))
+        end           = Math.min( end, start + 256 )
+        int    length = ( end - start )
+        long   sum    = checksum( array, start, length )
+        String sCache = STRINGS.get( sum )
+        String sNew   = new String( array, 0, start, length )
 
-        if ( s1 )
+        if ( sCache )
         {
-            if ( ! ( s1 == s2 ))
+            if ( ! ( sCache == sNew ))
             {
-                throw new RuntimeException( "[$s1](${ s1.hashCode()}) != [$s2](${ s2.hashCode()}) ($hashcode)" );
+                long sCacheChecksum = checksum( sCache.getBytes(), 0, sCache.size())
+                long sNewChecksum   = checksum( sNew.getBytes(),   0, sNew.size())
+                throw new RuntimeException( "[$sCache]($sCacheChecksum) != [$sNew]($sNewChecksum) ($sum)" );
             }
-            return s1
+
+            return sCache
         }
-
-        STRINGS.put( hashcode, s2 )
-
-        return s2
+        else
+        {
+            STRINGS.put( sum, sNew )
+            return sNew
+        }
     }
 
 
-    private static int hashcode( byte[] array, int start, int end )
+    private static long checksum( byte[] array, int offset, int length )
     {
-        int hashcode = 0
-        for ( int j = start; j < end; j++ ) { hashcode = (( 31 * hashcode ) + array[ j ] ) }
-
-        return hashcode
+        Checksum crc = new CRC32();
+        crc.update( array, offset, length )
+        return crc.getValue()
     }
 
 
