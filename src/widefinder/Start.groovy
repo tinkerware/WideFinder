@@ -1,15 +1,17 @@
 @Typed
 package widefinder
 
+import com.twmacinta.util.MD5
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
-
-import java.util.zip.Checksum
+import java.util.zip.Adler32
 import java.util.zip.CRC32
+import java.util.zip.Checksum
+import org.apache.tools.bzip2.CRC
 
 class Start
 {
@@ -43,7 +45,7 @@ class Start
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-     private static final Map<Long, String> STRINGS = new ConcurrentHashMap<Long, String>();
+     private static final Map<String, String> STRINGS = new ConcurrentHashMap<String, String>();
 
 
    /**
@@ -356,36 +358,7 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        end           = Math.min( end, start + 256 )
-        int    length = ( end - start )
-        long   sum    = checksum( array, start, length )
-        String sCache = STRINGS.get( sum )
-        String sNew   = new String( array, 0, start, length )
-
-        if ( sCache )
-        {
-            if ( ! ( sCache == sNew ))
-            {
-                long sCacheChecksum = checksum( sCache.getBytes(), 0, sCache.size())
-                long sNewChecksum   = checksum( sNew.getBytes(),   0, sNew.size())
-                throw new RuntimeException( "[$sCache]($sCacheChecksum) != [$sNew]($sNewChecksum) ($sum)" );
-            }
-
-            return sCache
-        }
-        else
-        {
-            STRINGS.put( sum, sNew )
-            return sNew
-        }
-    }
-
-
-    private static long checksum( byte[] array, int offset, int length )
-    {
-        Checksum crc = new CRC32();
-        crc.update( array, offset, length )
-        return crc.getValue()
+        new String( array, 0, start, ( Math.min( end, start + 256 ) - start ))
     }
 
 
