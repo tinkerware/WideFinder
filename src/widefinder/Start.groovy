@@ -43,7 +43,7 @@ class Start
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-    private static final Map<HashKey, String> STRINGS = new ConcurrentHashMap<HashKey, String>( 100 * 1024 )
+    private static final NoRehashMap<HashKey, String> STRINGS = new NoRehashMap<HashKey, String>( 10240, 0.9F, true );
 
 
    /**
@@ -80,59 +80,10 @@ class Start
         channel.close();
         fis.close();
 
-        reportTopResults( N, pool );
-
         pool.shutdown();
         println "[${ System.currentTimeMillis() - t }] ms"
     }
 
-
-
-   /**
-    * Reports all results
-    */
-    private static void reportTopResults ( int n, ThreadPoolExecutor pool )
-    {
-/*
-        pool.getCorePoolSize().times
-        {
-            */
-/**
-             * Each thread calculates it's own "top n" maps
-             *//*
-
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).calculateTop( n ) })
-        }
-
-        List<List<Map<Long, Collection<String>>>> topMaps           = futures*.get()
-        Map<String, Long>                         topArticlesToHits = StatUtils.sumAndTop( n, topMaps*.get( 0 ));
-        Map<String, Long>                         topUrisToBytes    = StatUtils.sumAndTop( n, topMaps*.get( 1 ));
-        Map<String, Long>                         topUrisTo404      = StatUtils.sumAndTop( n, topMaps*.get( 2 ));
-
-        futures = [];
-        pool.getCorePoolSize().times
-        {
-            */
-/**
-             * Each thread calculates it's own "top n clients/referrers" maps
-             * (according to "top articles" calculated previously)
-             *//*
-
-
-            futures << pool.submit({ (( Stat ) Thread.currentThread()).filterWithArticles( topArticlesToHits.keySet()) })
-        }
-
-        List<List<Map<String, L>>> topArticlesMaps        = futures*.get();
-        Map<String, Long>          topClientsToArticles   = StatUtils.sumAndTop2( n, topArticlesMaps*.get( 0 ));
-        Map<String, Long>          topReferrersToArticles = StatUtils.sumAndTop2( n, topArticlesMaps*.get( 1 ));
-
-        report( "Top $n articles (by hits)",          topArticlesToHits      );
-        report( "Top $n URIs (by bytes count)",       topUrisToBytes         );
-        report( "Top $n URIs (by 404 responses)",     topUrisTo404           );
-        report( "Top $n clients (by top articles)",   topClientsToArticles   );
-        report( "Top $n referrers (by top articles)", topReferrersToArticles );
-*/
-    }
 
 
     static void report( String title, Map<String, Long> map )
@@ -162,20 +113,11 @@ class Start
             {
                 final long currentTime = System.currentTimeMillis();
                 println "[${ ( int )( currentPosition / GB ) }] Gb - [${ ( currentTime - prevTime ) / 1000 }] sec";
+                println "Cache: size - [${ STRINGS.size() }], maps - [${ STRINGS.mapsNumber() }]"
+                println "Data : size - [${ Stat.DATA.size() }], maps - [${ Stat.DATA.mapsNumber() }]"
 
                 prevPosition = currentPosition;
                 prevTime     = currentTime;
-
-                pool.getCorePoolSize().times
-                {
-                    pool.submit(
-                    {
-                       Stat        stat = ( Stat ) Thread.currentThread()
-                       NoRehashMap data = stat.getData()
-
-                       println "Thread [$stat], data: size - [${ data.size() }], maps - [${ data.mapsNumber() }]"
-                    } as Runnable )
-                }
             }
 
             int     bytesRead = channel.read( buffer );

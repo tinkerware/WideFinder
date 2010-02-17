@@ -1,6 +1,8 @@
 @Typed
 package widefinder
 
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * {@link Map} implementation avoiding any rehashes
@@ -9,11 +11,12 @@ package widefinder
  */
 public class NoRehashMap<K, V> implements Map<K, V>
 {
-    final boolean         threadSafe
-    final int             capacity
-    final int             threshold
-    final float           loadFactor
-    final List<Map<K, V>> maps
+    final int                   capacity
+    final float                 loadFactor
+    final boolean               concurrent
+    final int                   threshold
+    final Collection<Map<K, V>> maps
+          Map<K, V>             lastMap
 
 
    /**
@@ -21,7 +24,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
     *
     * @param capacity   initial capacity for each internal Map, same as in {@link HashMap} constructor
     * @param loadFactor internal Map load factor, same as in {@link HashMap} constructor
-    * @param threadSafe whether this instance should be thread-safe
+    * @param concurrent whether this instance is supposed to operate in concurrent environment
     *
     * Actual size of each internal Map (there will be N of them - depending on their capacities and total number
     * of elements added to <code>NoRehashMap</code>) will be no more than {@code threshold  = (( capacity * loadFactor ) - 1 ) }
@@ -32,21 +35,24 @@ public class NoRehashMap<K, V> implements Map<K, V>
     *   If the initial capacity is greater than the maximum number of entries divided by the load factor, no rehash operations will ever occur
     * </a>
     */
-    public NoRehashMap ( int capacity, float loadFactor = 0.85f, boolean threadSafe = false )
+    public NoRehashMap ( int capacity, float loadFactor = 0.85f, boolean concurrent = false )
     {
         assert ( loadFactor > 0.0f ) && ( loadFactor < 1.0f )
 
-        this.@capacity   = capacity                         // Initial Map capacity
-        this.@threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
-        this.@loadFactor = loadFactor                       // Load factor
-        this.@maps       = new ArrayList<Map<K, V>>([ newMap() ]);
-        this.@threadSafe = threadSafe
+        this.capacity   = capacity                         // Initial Map capacity
+        this.threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
+        this.loadFactor = loadFactor                       // Load factor
+        this.concurrent = concurrent
+        this.maps       = isConcurrent() ? new ConcurrentLinkedQueue<Map<K, V>>([ newMap() ]) :
+                                           new ArrayList<Map<K, V>>([ newMap() ]);
     }
 
 
     private Map<K, V> newMap()
     {
-        new HashMap<K,V>( getCapacity(), getLoadFactor())
+        setLastMap( isConcurrent() ? new ConcurrentHashMap<K, V>( getCapacity(), getLoadFactor(), Runtime.getRuntime().availableProcessors()) :
+                                     new HashMap<K, V>( getCapacity(), getLoadFactor()))
+        getLastMap()
     }
 
 
@@ -111,7 +117,7 @@ public class NoRehashMap<K, V> implements Map<K, V>
             return map.put( key, value )
         }
 
-        map = getMaps().last()
+        map = getLastMap()
         map.put( key, value )
 
         if ( map.size() == getThreshold())
