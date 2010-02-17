@@ -1,7 +1,6 @@
 @Typed
 package widefinder
 
-import com.twmacinta.util.MD5
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.util.concurrent.ConcurrentHashMap
@@ -9,9 +8,8 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.zip.Adler32
-import java.util.zip.CRC32
+
 import java.util.zip.Checksum
-import org.apache.tools.bzip2.CRC
 
 class Start
 {
@@ -45,7 +43,7 @@ class Start
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-     private static final Map<String, String> STRINGS = new ConcurrentHashMap<String, String>();
+    private static final Map<HashKey, String> STRINGS = new HashMap<HashKey, String>( 100 * 1024 )
 
 
    /**
@@ -358,7 +356,33 @@ class Start
     */
     private static String string( byte[] array, int start, int end )
     {
-        new String( array, 0, start, ( Math.min( end, start + 256 ) - start ))
+        end            = Math.min( end, start + 256 )
+        HashKey key    = hashkey( array, start, end )
+        String  sCache = STRINGS.get( key )
+
+        if ( sCache )
+        {
+            return sCache
+        }
+        else
+        {
+            String sNew = new String( array, 0, start, ( end - start ))
+            STRINGS.put( key, sNew )
+            return sNew
+        }
+    }
+
+
+    private static HashKey hashkey( byte[] array, int start, int end )
+    {
+        int hashcode = 0
+        for ( int j = start; j < end; j++ ) { hashcode = (( 31 * hashcode ) + array[ j ] ) }
+
+        Checksum cs = new Adler32();
+        cs.update( array, start, ( end - start ))
+        long checksum = cs.getValue()
+
+        new HashKey( hashcode, checksum )
     }
 
 

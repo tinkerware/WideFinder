@@ -54,11 +54,14 @@ class Stat extends Thread
                  int     byteCount,
                  String  referrer )
     {
-
-        UriData uriData = getData()[ uri ]
         boolean is404   = ( statusCode == '404' )
+        UriData uriData = getData().get( uri )
 
-        if ( uriData == null ) { uriData = ( getData()[ uri ] = ( isArticle ? new ArticleUriData() : new UriData())) }
+        if ( uriData == null )
+        {
+            uriData = ( isArticle ? new ArticleUriData() : new UriData())
+            getData().put( uri, uriData )
+        }
 
         if ( isArticle )
         {
