@@ -7,21 +7,27 @@ package widefinder
  */
 class HashKey
 {
-    private final int  hashcode
-    private final long checksum
+    private final int  i
+    private final long l
 
-    HashKey ( int hashcode, long checksum )
+    HashKey ( int i, long l )
     {
-        this.hashcode = hashcode;
-        this.checksum = checksum;
+        this.i = i;
+        this.l = l;
     }
 
     @Override
-    int hashCode () { this.hashcode }
+    public int hashCode () { ( this.i * 31 ) + this.l }
 
     @Override
-    boolean equals ( Object o ) { ((( HashKey ) o ).hashcode == this.hashcode ) && ((( HashKey ) o ).checksum == this.checksum ) }
+    public boolean equals ( Object o )
+    {
+        if ( this.is( o )) { return true }
+
+        HashKey otherKey = (( HashKey ) o )
+        ( otherKey.@i == this.@i ) && ( otherKey.@l == this.@l )
+    }
 
     @Override
-    String toString () { "[${ this.hashcode }][${ this.checksum }]" }
+    String toString () { "[${ this.i }][${ this.l }]" }
 }

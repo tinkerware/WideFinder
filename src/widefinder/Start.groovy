@@ -43,7 +43,7 @@ class Start
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-    private static final Map<HashKey, String> STRINGS = new HashMap<HashKey, String>( 100 * 1024 )
+    private static final Map<HashKey, String> STRINGS = new ConcurrentHashMap<HashKey, String>( 100 * 1024 )
 
 
    /**
