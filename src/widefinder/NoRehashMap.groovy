@@ -3,6 +3,7 @@ package widefinder
 
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.*
 
 /**
  * {@link Map} implementation avoiding any rehashes
@@ -14,9 +15,11 @@ public class NoRehashMap<K, V> implements Map<K, V>
     final int                   capacity
     final float                 loadFactor
     final boolean               concurrent
+    final boolean               strict
     final int                   threshold
     final Collection<Map<K, V>> maps
           Map<K, V>             lastMap
+    final ReadWriteLock         lock
 
 
    /**
@@ -35,16 +38,20 @@ public class NoRehashMap<K, V> implements Map<K, V>
     *   If the initial capacity is greater than the maximum number of entries divided by the load factor, no rehash operations will ever occur
     * </a>
     */
-    public NoRehashMap ( int capacity, float loadFactor = 0.85f, boolean concurrent = false )
+    public NoRehashMap ( int capacity, float loadFactor = 0.85f, boolean concurrent = false, boolean strict = true )
     {
         assert ( loadFactor > 0.0f ) && ( loadFactor < 1.0f )
 
-        this.capacity   = capacity                         // Initial Map capacity
-        this.threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
-        this.loadFactor = loadFactor                       // Load factor
-        this.concurrent = concurrent
-        this.maps       = isConcurrent() ? new ConcurrentLinkedQueue<Map<K, V>>([ newMap() ]) :
-                                           new ArrayList<Map<K, V>>([ newMap() ]);
+        this.@capacity   = capacity                         // Initial Map capacity
+        this.@threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
+        this.@loadFactor = loadFactor                       // Load factor
+        this.@concurrent = concurrent
+        this.@strict     = concurrent && strict
+
+        this.@maps       = isConcurrent() ? new ConcurrentLinkedQueue<Map<K, V>>([ newMap() ]) :
+                                            new ArrayList<Map<K, V>>([ newMap() ])
+        this.@lock       = isStrict() ? new ReentrantReadWriteLock() :
+                                        null
     }
 
 
@@ -56,9 +63,42 @@ public class NoRehashMap<K, V> implements Map<K, V>
     }
 
 
-    private Map<K, V> findMap ( Object key )
+
+   /**
+    * Finds a Map containing the key specified
+    * @param key key to use
+    * @return Map containing the key specified or <code>null</code> if not found
+    */
+    private Map<K, V> findMap ( Object key ) { getMaps().find { it.containsKey( key ) }}
+
+
+    private <T> T readLock( Closure c )
     {
-        return getMaps().find { it.containsKey( key ) }
+        if ( isStrict()) { getLock().readLock().lock() }
+
+        try
+        {
+            return c()
+        }
+        finally
+        {
+            if ( isStrict()) { getLock().readLock().unlock() }
+        }
+    }
+
+
+    private <T> T writeLock( Closure c )
+    {
+        if ( isStrict()) { getLock().writeLock().lock() }
+
+        try
+        {
+            return c()
+        }
+        finally
+        {
+            if ( isStrict()) { getLock().writeLock().unlock() }
+        }
     }
 
 
@@ -95,40 +135,49 @@ public class NoRehashMap<K, V> implements Map<K, V>
     @Override
     public void clear ()
     {
-        getMaps().clear()
-        getMaps() << newMap()
+        writeLock
+        {
+            getMaps().clear()
+            getMaps() << newMap()
+        }
     }
+
+
 
 
     @Override
     public V get ( Object key )
     {
-        findMap( key )?.get( key )
+        return readLock {
+            return findMap( key )?.get( key )
+        }
     }
 
 
     @Override
     public V put ( K key, V value )
     {
-        Map map = findMap( key )
+        return writeLock {
+            
+            Map map = findMap( key )
+            if ( map )
+            {
+                return map.put( key, value )
+            }
 
-        if ( map )
-        {
-            return map.put( key, value )
+            map = getLastMap()
+            map.put( key, value )
+
+            if ( map.size() == getThreshold())
+            {
+                /**
+                 * Last map is full - creating a new one
+                 */
+                getMaps() << newMap()
+            }
+
+            return null
         }
-
-        map = getLastMap()
-        map.put( key, value )
-
-        if ( map.size() == getThreshold())
-        {
-            /**
-             * Last map is full - creating a new one
-             */
-            getMaps() << newMap()
-        }
-
-        return null
     }
 
 
