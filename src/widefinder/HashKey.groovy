@@ -1,4 +1,3 @@
-
 @Typed
 package widefinder
 

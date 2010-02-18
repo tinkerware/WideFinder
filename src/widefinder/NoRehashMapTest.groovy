@@ -2,7 +2,7 @@
 package widefinder
 
 import org.junit.Test
-
+import widefinder.maps.NoRehashMap
 
 /**
  * {@link NoRehashMap} unit tests
@@ -230,7 +230,7 @@ class NoRehashMapTest extends GroovyTestCase
                                assertTrue( m2.containsValue( "<$j>" ));
                                assertEquals( "<$j>", m2[ "[$j]" ] );
                                assertEquals( "<$j>", m2.get( "[$j]" ))}
-        
+
         m2.clear()
         1.upto( 1000 ){ j -> m2.put( "[$j]", "<$j>" ) }
         m2.putAll( m1 )

@@ -3,6 +3,8 @@ package widefinder
 
 import java.util.regex.Pattern
 import java.util.regex.Matcher
+import widefinder.maps.*
+
 
 /**
  * Statistics class
@@ -28,7 +30,7 @@ class Stat extends Thread
    /**
     * Data Map
     */
-    final static NoRehashMap<String, ? extends UriData> DATA = new NoRehashMap<String, ? extends UriData>( 10240, 0.9F, true )
+    final static NoRehashMap<String, ? extends UriData> DATA = new StrictConcurrentNoRehashMap<String, ? extends UriData>( 10240, 0.9F )
 
 
    /**

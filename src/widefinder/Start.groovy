@@ -7,6 +7,8 @@ import java.nio.channels.FileChannel
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
+import widefinder.maps.*
+
 
 class Start
 {
@@ -40,7 +42,7 @@ class Start
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-    private static final NoRehashMap<HashKey, String> STRINGS = new NoRehashMap<HashKey, String>( 10240, 0.9F, true );
+    private static final NoRehashMap<HashKey, String> STRINGS = new ConcurrentNoRehashMap<HashKey, String>( 10240, 0.9F );
 
 
    /**
