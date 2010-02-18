@@ -3,13 +3,10 @@ package widefinder
 
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
-import java.util.concurrent.ConcurrentHashMap
+
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 import java.util.concurrent.ThreadPoolExecutor
-import java.util.zip.Adler32
-
-import java.util.zip.Checksum
 
 class Start
 {
@@ -315,15 +312,30 @@ class Start
     }
 
 
+
+
+    /**
+     * Calculates {@link HashKey} for the <code>byte[]</code> area specified
+     */
     private static HashKey hashkey( byte[] array, int start, int end )
     {
         int hashcode = 0
-        for ( int j = start; j < end; j++ ) { hashcode = (( 31 * hashcode ) + array[ j ] ) }
+        int n        = ( end - start )
+        int A        = 1
+        int B        = n
 
-        Checksum cs = new Adler32();
-        cs.update( array, start, ( end - start ))
-        long checksum = cs.getValue()
+        // String hashcode : http://www.docjar.com/html/api/java/lang/String.java.html
+        // Adler32 checksum: http://en.wikipedia.org/wiki/Adler-32
 
+        for ( int j = 0; j < n; j++ )
+        {
+            byte b    = array[ j + start ]
+            hashcode  = (( 31 * hashcode ) + b )
+            A        += b                 // A = 1 + D1 + D2 + ... + Dn (mod 65521)
+            B        += (( n - j ) * b )  // B = n×D1 + (n-1)×D2 + (n-2)×D3 + ... + Dn + n (mod 65521)
+        }
+
+        long checksum = (( B % 65521 ) * 65536 ) + ( A % 65521 )
         new HashKey( hashcode, checksum )
     }
 

@@ -2,8 +2,9 @@
 @Typed
 package widefinder
 
+
 /**
- * Map key wrapping <code>int</code> and <code>long</code>
+ * Map key wrapping <code>int hashcode</code> and <code>long checksum</code>
  */
 class HashKey
 {
