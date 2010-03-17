@@ -11,8 +11,8 @@ public class NoRehashMap<K, V> implements Map<K, V>
     final int             capacity
     final float           loadFactor
     final int             threshold
-          Map<K, V>       tailMap = newMap()
-    final List<Map<K, V>> maps    = new ArrayList<Map<K, V>>([ getTailMap() ])
+    final List<Map<K, V>> maps
+          Map<K, V>       tailMap
 
 
    /**
@@ -38,6 +38,8 @@ public class NoRehashMap<K, V> implements Map<K, V>
         this.@capacity   = capacity                         // Initial Map capacity
         this.@threshold  = (( capacity * loadFactor ) - 1 ) // Maximal Map size it's allowed to reach
         this.@loadFactor = loadFactor                       // Load factor
+        this.@tailMap    = newMap()
+        this.@maps       = new ArrayList<Map<K, V>>([ getTailMap() ])
     }
 
 

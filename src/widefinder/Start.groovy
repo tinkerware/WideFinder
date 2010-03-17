@@ -35,14 +35,14 @@ class Start
     /**
      * Pre-calculated powers of 10: 1, 10, 100, 1000 ...
      */
-    private static final int[] TEN_POWERS = ( 0 .. 9 ).collect { int j -> ( 10 ** j ) }
+    private static final int[] TEN_POWERS = ( 0 .. 9 ).collect { int j -> ( 10 ** j ) }.toArray()
 
 
     /**
      * Shared storage of all allocated Strings,
      * keyed by their checksum
      */
-    private static final NoRehashMap<HashKey, String> STRINGS = new ConcurrentNoRehashMap<HashKey, String>( 10240, 0.9F );
+    private static final NoRehashMap<HashKey, String> STRINGS = new NoRehashMap<HashKey, String>( 10240, 0.9F );
 
 
    /**

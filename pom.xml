@@ -40,6 +40,15 @@
     </pluginRepositories>
 
 
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <!-- Gmaven plugin:                                                             -->
+    <!-- http://docs.codehaus.org/display/GMAVEN/Home                               -->
+    <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119               -->
+    <!-- http://groovy.codehaus.org/gmaven-generated/gmaven-plugin/plugin-info.html -->
+    <!-- http://delicious.com/evgenyg/gmaven                                        -->
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+
     <build>
         <plugins>
             <plugin>
@@ -53,22 +62,22 @@
                         <goals>
                             <goal>compile</goal>
                         </goals>
+                        <configuration>
+                            <providerSelection>1.7</providerSelection>
+                            <verbose>true</verbose>
+                            <debug>true</debug>
+                            <stacktrace>true</stacktrace>
+                            <sources>
+                                <fileset>
+                                    <directory>${project.basedir}/src</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <providerSelection>1.7</providerSelection>
-                    <verbose>true</verbose>
-                    <debug>true</debug>
-                    <stacktrace>true</stacktrace>
-                    <sources>
-                        <fileset>
-                            <directory>${project.basedir}/src</directory>
-                            <includes>
-                                <include>**/*.groovy</include>
-                            </includes>
-                        </fileset>
-                    </sources>
-                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.codehaus.gmaven.runtime</groupId>
@@ -81,13 +90,6 @@
                             </exclusion>
                         </exclusions>
                     </dependency>
-<!--
-                    <dependency>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-all</artifactId>
-                        <version>1.7.1</version>
-                    </dependency>
--->
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovypp-all</artifactId>
@@ -100,18 +102,6 @@
 
 
     <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.8.1</version>
-        </dependency>
-<!--
-        <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>1.7.1</version>
-        </dependency>
--->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovypp-all</artifactId>

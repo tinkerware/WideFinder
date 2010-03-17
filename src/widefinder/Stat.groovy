@@ -30,7 +30,7 @@ class Stat extends Thread
    /**
     * Data Map
     */
-    final static NoRehashMap<String, ? extends UriData> DATA = new StrictConcurrentNoRehashMap<String, ? extends UriData>( 10240, 0.9F )
+    final static NoRehashMap<String, ? extends UriData> DATA = new NoRehashMap<String, ? extends UriData>( 10240, 0.9F )
 
 
    /**
