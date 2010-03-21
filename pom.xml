@@ -13,6 +13,7 @@
 
     <properties>
         <repo>http://groovypp.artifactoryonline.com/groovypp</repo>
+        <groovypp-version>0.1.19</groovypp-version>
     </properties>
 
 
@@ -40,17 +41,18 @@
     </pluginRepositories>
 
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <!-- Gmaven plugin:                                                             -->
-    <!-- http://docs.codehaus.org/display/GMAVEN/Home                               -->
-    <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119               -->
-    <!-- http://groovy.codehaus.org/gmaven-generated/gmaven-plugin/plugin-info.html -->
-    <!-- http://delicious.com/evgenyg/gmaven                                        -->
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-
 
     <build>
         <plugins>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Gmaven plugin:                                                             -->
+            <!-- http://docs.codehaus.org/display/GMAVEN/Home                               -->
+            <!-- http://permalink.gmane.org/gmane.comp.lang.groovy.user/47119               -->
+            <!-- http://groovy.codehaus.org/gmaven-generated/gmaven-plugin/plugin-info.html -->
+            <!-- http://delicious.com/evgenyg/gmaven                                        -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
@@ -93,9 +95,36 @@
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
                         <artifactId>groovypp-all</artifactId>
-                        <version>0.1.18</version>
+                        <version>${groovypp-version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <!-- Running 'main'                                            -->
+            <!-- http://mojo.codehaus.org/exec-maven-plugin/java-mojo.html -->
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <executions>
+                    <execution>
+                        <id>run-main</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>widefinder.Start</mainClass>
+                            <arguments>
+                                <argument>${project.basedir}/data/data-100000.log</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -105,7 +134,7 @@
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovypp-all</artifactId>
-            <version>0.1.18</version>
+            <version>${groovypp-version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
