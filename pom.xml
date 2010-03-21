@@ -94,7 +94,7 @@
                     </dependency>
                     <dependency>
                         <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovypp-all</artifactId>
+                        <artifactId>groovypp</artifactId>
                         <version>${groovypp-version}</version>
                     </dependency>
                 </dependencies>
@@ -133,7 +133,7 @@
     <dependencies>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovypp-all</artifactId>
+            <artifactId>groovypp</artifactId>
             <version>${groovypp-version}</version>
             <scope>compile</scope>
         </dependency>
