@@ -87,7 +87,7 @@
                         <version>1.2</version>
                         <exclusions>
                             <exclusion>
-                                <groupId>org.mbte.groovypp</groupId>
+                                <groupId>org.codehaus.groovy</groupId>
                                 <artifactId>groovy-all</artifactId>
                             </exclusion>
                         </exclusions>
