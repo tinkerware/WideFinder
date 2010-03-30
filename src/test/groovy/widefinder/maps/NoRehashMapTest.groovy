@@ -1,4 +1,4 @@
-@Typed
+//@Typed
 package widefinder.maps
 
 import org.junit.Test
