@@ -14,7 +14,7 @@ class MapsTest extends GroovyTestCase
 
         1.upto( 10 ){ int j -> m[ "[$j]" ] = "<$j>" }
         1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
-        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) } // Fails !
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) } // Fails, returns null
     }
 
 
@@ -25,7 +25,7 @@ class MapsTest extends GroovyTestCase
 
         1.upto( 10 ){ int j -> m[ "[$j]" ] = "<$j>" }
         1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
-        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]".toString())) } // Fixed !
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]".toString())) } // Fixed
     }
 
 
@@ -36,7 +36,7 @@ class MapsTest extends GroovyTestCase
 
         1.upto( 10 ){ int j -> m.put( "[$j]", "<$j>" ) }
         1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) }
-        1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) } // Fails and can't be fixed !
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }  // Fails, returns null, can't be fixed
     }
 
 }
