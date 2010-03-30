@@ -4,7 +4,7 @@ package widefinder.maps
 /**
  * {@link Map} implementation avoiding any rehashes
  *
- * @see widefinder.NoRehashMapTest
+ * @see widefinder.maps.NoRehashMapTest
  */
 public class NoRehashMap<K, V> implements Map<K, V>
 {

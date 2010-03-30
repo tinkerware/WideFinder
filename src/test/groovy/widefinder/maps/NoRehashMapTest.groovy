@@ -1,5 +1,4 @@
-@Typed
-package widefinder
+package widefinder.maps
 
 import org.junit.Test
 import widefinder.maps.NoRehashMap

@@ -43,6 +43,10 @@
 
 
     <build>
+
+        <sourceDirectory>${project.basedir}/src/main/groovy</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/src/test/groovy</testSourceDirectory>
+
         <plugins>
 
             <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
@@ -60,18 +64,31 @@
                 <executions>
                     <execution>
                         <id>compile-groovy</id>
-                        <phase>process-sources</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <providerSelection>1.7</providerSelection>
-                            <verbose>true</verbose>
-                            <debug>true</debug>
-                            <stacktrace>true</stacktrace>
                             <sources>
                                 <fileset>
-                                    <directory>${project.basedir}/src</directory>
+                                    <directory>${project.basedir}/src/main/groovy</directory>
+                                    <includes>
+                                        <include>**/*.groovy</include>
+                                    </includes>
+                                </fileset>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>compile-groovy-tests</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <fileset>
+                                    <directory>${project.basedir}/src/test/groovy</directory>
                                     <includes>
                                         <include>**/*.groovy</include>
                                     </includes>
@@ -80,6 +97,12 @@
                         </configuration>
                     </execution>
                 </executions>
+                <configuration>
+                    <providerSelection>1.7</providerSelection>
+                    <verbose>true</verbose>
+                    <debug>true</debug>
+                    <stacktrace>true</stacktrace>
+                </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.codehaus.gmaven.runtime</groupId>
@@ -136,6 +159,12 @@
             <artifactId>groovypp-all</artifactId>
             <version>${groovypp-version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
