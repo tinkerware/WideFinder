@@ -13,7 +13,7 @@
 
     <properties>
         <repo>http://groovypp.artifactoryonline.com/groovypp</repo>
-        <groovypp-version>0.1.19</groovypp-version>
+        <groovypp-version>0.1.20</groovypp-version>
     </properties>
 
 
