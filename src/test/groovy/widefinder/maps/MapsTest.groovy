@@ -10,23 +10,33 @@ class MapsTest extends GroovyTestCase
     @Test
     void test1()
     {
-        Map m = new HashMap<String, String>( 1234 )
+        def m = [:]
 
-        1.upto( 10000 ){ int j -> m[ "[$j]" ] = "<$j>" }
+        1.upto( 10 ){ int j -> m[ "[$j]" ] = "<$j>" }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) } // Fails !
+    }
 
-        10000.downto( 1 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
-        10000.downto( 1 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) }
+
+    @Test
+    void test1Fixed()
+    {
+        def m = [:]
+
+        1.upto( 10 ){ int j -> m[ "[$j]" ] = "<$j>" }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]".toString())) } // Fixed !
     }
 
 
     @Test
     void test2()
     {
-        Map m = new HashMap<String, String>( 1234 )
+        def m = [:]
 
-        1.upto( 10000 ){ int j -> m[ "[$j]" ] = "<$j>" }
-
-        10000.downto( 1 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]              ) }
-        10000.downto( 1 ){ int j -> assertEquals( "<$j>", m.get( "[$j]".toString())) }
+        1.upto( 10 ){ int j -> m.put( "[$j]", "<$j>" ) }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) }
+        1.upto( 10 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) } // Fails and can't be fixed !
     }
+
 }
