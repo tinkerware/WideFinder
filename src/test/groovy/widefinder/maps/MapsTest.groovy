@@ -13,7 +13,6 @@ class MapsTest extends GroovyTestCase
         Map m = new HashMap<String, String>( 1234 )
 
         1.upto( 10000 ){ int j -> m[ "[$j]" ] = "<$j>" }
-        assertEquals( 10000, m.size())
 
         10000.downto( 1 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]    ) }
         10000.downto( 1 ){ int j -> assertEquals( "<$j>", m.get( "[$j]" )) }
@@ -26,7 +25,6 @@ class MapsTest extends GroovyTestCase
         Map m = new HashMap<String, String>( 1234 )
 
         1.upto( 10000 ){ int j -> m[ "[$j]" ] = "<$j>" }
-        assertEquals( 10000, m.size())
 
         10000.downto( 1 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ]              ) }
         10000.downto( 1 ){ int j -> assertEquals( "<$j>", m.get( "[$j]".toString())) }
