@@ -1,3 +1,4 @@
+@Typed
 package widefinder.maps
 
 import org.junit.Test
@@ -15,17 +16,17 @@ class NoRehashMapTest extends GroovyTestCase
         assertEquals( 1, new NoRehashMap( 1 ).mapsNumber())
 
         NoRehashMap m = new NoRehashMap<Integer, Integer>( 1000, 0.95f )
-        1.upto( 100000 ){ j -> m.put( j, j ) }
+        1.upto( 100000 ){ int j -> m.put( j, j ) }
         assertEquals( 106, m.mapsNumber()) // ( 100000 / 948 ) + 1
 
 
         m = new NoRehashMap<Integer, Integer>( 10000, 0.65f )
-        1.upto( 10000 ){ j -> m.put( j, j ) }
+        1.upto( 10000 ){ int j -> m.put( j, j ) }
         assertEquals( 2, m.mapsNumber()) // ( 10000 / 6499 ) + 1
 
 
         m = new NoRehashMap<Integer, Integer>( 1000, 0.10f )
-        1.upto( 98 ){ j -> m.put( j, j ) }
+        1.upto( 98 ){ int j -> m.put( j, j ) }
         assertEquals( 1, m.mapsNumber())
     }
 
@@ -34,18 +35,18 @@ class NoRehashMapTest extends GroovyTestCase
     void testSize()
     {
         NoRehashMap m = new NoRehashMap<Integer, Integer>( 10000, 0.95f )
-        1.upto( 100000 ){ j -> m.put( j, j ) }
+        1.upto( 100000 ){ int j -> m.put( j, j ) }
         assertEquals( 100000, m.size())
 
-        1.upto( 100000 ){ j -> m.put( j, j ) }
+        1.upto( 100000 ){ int j -> m.put( j, j ) }
         assertEquals( 100000, m.size())
-
 
         m = new NoRehashMap<String, Integer>( 10000 )
-        1.upto( 100000 ){ j -> m.put( "[$j]", j ) }
+        1.upto( 100000 ){ int j -> m.put( "[$j]", j ) }
+
         assertEquals( 100000, m.size())
 
-        1.upto( 100000 ){ j -> m.put( "[$j][new]", j ) }
+        1.upto( 100000 ){ int j -> m.put( "[$j][new]", j ) }
         assertEquals( 200000, m.size())
     }
 
@@ -54,10 +55,10 @@ class NoRehashMapTest extends GroovyTestCase
     void testKeySet()
     {
         Map m    = new NoRehashMap<String, Integer>( 45000 )
-        1.upto( 100000 ){ j -> m.put( "$j", j ) }
+        1.upto( 100000 ){ int j -> m.put( "$j", j ) }
         def keys = m.keySet()
         assertEquals( 100000, keys.size())
-        100000.downto( 1 ){ j -> assertTrue ( keys.contains( "$j" )) }
+        100000.downto( 1 ){ int j -> assertTrue ( keys.contains( "$j" )) }
     }
 
 
@@ -65,10 +66,10 @@ class NoRehashMapTest extends GroovyTestCase
     void testValues()
     {
         Map m = new NoRehashMap<String, String>( 450 )
-        1.upto( 1000 ){ j -> m.put( "$j", "$j" ) }
+        1.upto( 1000 ){ int j -> m.put( "$j", "$j" ) }
         def values = m.values()
         assertEquals( 1000, values.size())
-        1000.downto( 1 ){ j -> assertTrue ( values.contains( "$j" )) }
+        1000.downto( 1 ){ int j -> assertTrue ( values.contains( "$j" )) }
     }
 
 
@@ -129,11 +130,11 @@ class NoRehashMapTest extends GroovyTestCase
         assertEquals( 0, m.size())
         assertTrue( m.isEmpty())
 
-        1.upto( 10000 ){ j -> m.put( "[$j]", "<$j>" ) }
+        1.upto( 10000 ){ int j -> m.put( "[$j]", "<$j>" ) }
         assertEquals( 10000, m.size())
 
-        10000.downto( 1 ){ j -> assertTrue( m.containsKey( "[$j]" ));
-                                assertFalse( m.containsKey( "<$j>" ))}
+        10000.downto( 1 ){ int j -> assertTrue( m.containsKey( "[$j]" ));
+                                    assertFalse( m.containsKey( "<$j>" ))}
 
     }
 
@@ -169,11 +170,11 @@ class NoRehashMapTest extends GroovyTestCase
         assertEquals( 0, m.size())
         assertTrue( m.isEmpty())
 
-        1.upto( 1000 ){ j -> m.put( "[$j]", "<$j>" ) }
+        1.upto( 1000 ){ int j -> m.put( "[$j]", "<$j>" ) }
         assertEquals( 1000, m.size())
 
-        1000.downto( 1 ){ j -> assertTrue( m.containsValue( "<$j>" ));
-                               assertFalse( m.containsValue( "[$j]" ))}
+        1000.downto( 1 ){ int j -> assertTrue( m.containsValue( "<$j>" ));
+                                   assertFalse( m.containsValue( "[$j]" ))}
     }
 
 
@@ -199,12 +200,11 @@ class NoRehashMapTest extends GroovyTestCase
         assertEquals( 1, m.mapsNumber()) // There's always one internal Map, may be empty
         assertTrue( m.isEmpty())
 
-        1.upto( 10000 ){ j -> m.put( "[$j]", "<$j>" ) }
+        1.upto( 10000 ){ int j -> m.put( "[$j]", "<$j>" ) }
         assertEquals( 10000, m.size())
 
-        10000.downto( 1 ){ j -> assertEquals( "<$j>", m[ "[$j]" ] );
-                                assertEquals( "<$j>", m.get( "[$j]" ))}
-
+        10000.downto( 1 ){ int j -> assertEquals( "<$j>", m[ "[$j]" ] );
+                                    assertEquals( "<$j>", m.get( "[$j]" )) }
         m.clear()
         assertEquals( 0, m.size())
         assertEquals( 1, m.mapsNumber()) // There's always one internal Map, may be empty
@@ -216,7 +216,7 @@ class NoRehashMapTest extends GroovyTestCase
     void testPutAll()
     {
         Map m1 = new NoRehashMap<String, String>( 123 )
-        1.upto( 1000 ){ j -> m1.put( "[$j]", "<$j>" ) }
+        1.upto( 1000 ){ int j -> m1.put( "[$j]", "<$j>" ) }
         assertEquals( 1000, m1.size())
 
         Map m2 = new NoRehashMap<String, String>( 234 )
@@ -225,21 +225,21 @@ class NoRehashMapTest extends GroovyTestCase
         assertEquals( m1.size(), m2.size())
         assertEquals( 1000,      m2.size())
 
-        1000.downto( 1 ){ j -> assertTrue( m2.containsKey( "[$j]" ));
-                               assertTrue( m2.containsValue( "<$j>" ));
-                               assertEquals( "<$j>", m2[ "[$j]" ] );
-                               assertEquals( "<$j>", m2.get( "[$j]" ))}
+        1000.downto( 1 ){ int j -> assertTrue( m2.containsKey( "[$j]" ));
+                                   assertTrue( m2.containsValue( "<$j>" ));
+                                   assertEquals( "<$j>", m2[ "[$j]" ] );
+                                   assertEquals( "<$j>", m2.get( "[$j]" ))}
 
         m2.clear()
-        1.upto( 1000 ){ j -> m2.put( "[$j]", "<$j>" ) }
+        1.upto( 1000 ){ int j -> m2.put( "[$j]", "<$j>" ) }
         m2.putAll( m1 )
 
         assertEquals( m1.size(), m2.size())
         assertEquals( 1000,      m2.size())
 
-        1000.downto( 1 ){ j -> assertTrue( m2.containsKey( "[$j]" ));
-                               assertTrue( m2.containsValue( "<$j>" ));
-                               assertEquals( "<$j>", m2[ "[$j]" ] );
-                               assertEquals( "<$j>", m2.get( "[$j]" ))}
+        1000.downto( 1 ){ int j -> assertTrue( m2.containsKey( "[$j]" ));
+                                   assertTrue( m2.containsValue( "<$j>" ));
+                                   assertEquals( "<$j>", m2[ "[$j]" ] );
+                                   assertEquals( "<$j>", m2.get( "[$j]" ))}
     }
 }
