@@ -113,12 +113,21 @@
                                 <groupId>org.codehaus.groovy</groupId>
                                 <artifactId>groovy-all</artifactId>
                             </exclusion>
+                            <exclusion>
+                                <groupId>junit</groupId>
+                                <artifactId>junit</artifactId>
+                            </exclusion>
                         </exclusions>
                     </dependency>
                     <dependency>
                         <groupId>org.mbte.groovypp</groupId>
-                        <artifactId>groovypp-all</artifactId>
+                        <artifactId>groovypp</artifactId>
                         <version>${groovypp-version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                        <version>4.7</version>
                     </dependency>
                 </dependencies>
             </plugin>
@@ -156,7 +165,7 @@
     <dependencies>
         <dependency>
             <groupId>org.mbte.groovypp</groupId>
-            <artifactId>groovypp-all</artifactId>
+            <artifactId>groovypp</artifactId>
             <version>${groovypp-version}</version>
             <scope>compile</scope>
         </dependency>
